@@ -8,8 +8,8 @@
   <style>
     :root {
       --bg-dark: #040404;
-      --accent: #b4d93b;     /* softer neon */
-      --accent-soft: #9bb332;/* even softer for button */
+      --accent: #b4d93b;
+      --accent-soft: #9bb332;
       --text-light: #ffffff;
       --card-bg: #111111;
     }
@@ -149,7 +149,7 @@
       cursor: pointer;
       background: linear-gradient(135deg, var(--accent-soft), var(--accent));
       color: #111;
-      box-shadow: 0 0 12px rgba(180, 217, 59, 0.35); /* softer glow */
+      box-shadow: 0 0 12px rgba(180, 217, 59, 0.35);
       transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
@@ -223,7 +223,7 @@
   <!-- Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 🔑 same project + key as your app.html
+    // 🔑 same URL + anon key you use in your app (index.html)
     const SUPABASE_URL = "https://zblwysrjlfmbcqocemgl.supabase.co";
     const SUPABASE_ANON_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpibHd5c3JqbGZtYmNxb2NlbWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MzExNjYsImV4cCI6MjA4MDAwNzE2Nn0.e6QYJu-azAF7kqVpe2SytjkeSYE1zarnX85v1JxD8_0";
@@ -257,7 +257,7 @@
       }
     }
 
-    // toggle login/signup
+    // toggle login / signup
     toggleAuthLink.addEventListener("click", (e) => {
       e.preventDefault();
       setMode(authMode === "login" ? "signup" : "login");
@@ -273,8 +273,7 @@
       }
       try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-          // If you later build a dedicated reset page, change this:
-          redirectTo: window.location.origin + "/index.html",
+          redirectTo: window.location.origin + "/LOGIN.html", // adjust if you rename
         });
         if (error) throw error;
         alert("Password reset email sent. Check your inbox.");
@@ -297,16 +296,30 @@
 
       try {
         if (authMode === "login") {
-          const { data: { session }, error } =
-  await supabaseClient.auth.signInWithPassword({ email, password });
+          const {
+            data: { session },
+            error,
+          } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-if (!error && session) {
-  window.location.href = "app.html";
-}
+          if (error) {
+            console.error("signIn error:", error);
+            alert("Login failed: " + error.message);
+            return;
+          }
+          if (!session) {
+            alert("Login failed: no session returned.");
+            return;
+          }
 
+          // ✅ go to main app (your React dashboard)
+          window.location.href = "index.html";
         } else {
           const { error } = await supabaseClient.auth.signUp({ email, password });
-          if (error) throw error;
+          if (error) {
+            console.error("signUp error:", error);
+            alert("Sign-up failed: " + error.message);
+            return;
+          }
           alert("Account created. Check your email for confirmation, then log in.");
           setMode("login");
         }
@@ -321,9 +334,10 @@ if (!error && session) {
 
     // already logged in? skip login screen
     (async () => {
-      const { data } = await supabaseClient.auth.getSession();
-      if (data.session) {
-        window.location.href = "app.html";
+      const { data, error } = await supabaseClient.auth.getSession();
+      console.log("getSession on LOGIN page:", data, error);
+      if (data && data.session) {
+        window.location.href = "index.html";
       }
     })();
   </script>
