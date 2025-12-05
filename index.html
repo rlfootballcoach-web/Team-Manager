@@ -186,7 +186,7 @@
   <div class="login-wrapper">
     <header class="brand">
       <div class="brand-text-main">FOOTBALL FACTORY</div>
-      <div class="brand-tagline">WHERE PLAYERS ARE BUILT</div>
+      <div className="brand-tagline">WHERE PLAYERS ARE BUILT</div>
     </header>
 
     <main class="login-card">
@@ -223,7 +223,7 @@
   <!-- Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // 🔑 same URL + anon key you use in your app (index.html)
+    // 👉 must match your app (index.html)
     const SUPABASE_URL = "https://zblwysrjlfmbcqocemgl.supabase.co";
     const SUPABASE_ANON_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpibHd5c3JqbGZtYmNxb2NlbWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MzExNjYsImV4cCI6MjA4MDAwNzE2Nn0.e6QYJu-azAF7kqVpe2SytjkeSYE1zarnX85v1JxD8_0";
@@ -273,7 +273,7 @@
       }
       try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + "/LOGIN.html", // adjust if you rename
+          redirectTo: window.location.origin + "/LOGIN.html", // or /index.html if you want
         });
         if (error) throw error;
         alert("Password reset email sent. Check your inbox.");
@@ -285,7 +285,7 @@
 
     // login / signup submit
     form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+      e.preventDefault(); // 🔴 prevent full page reload
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
@@ -311,8 +311,8 @@
             return;
           }
 
-          // ✅ go to main app (your React dashboard)
-          window.location.href = "index.html";
+          // ✅ go to main app (React dashboard)
+          window.location.href = "index.html"; // your app file
         } else {
           const { error } = await supabaseClient.auth.signUp({ email, password });
           if (error) {
