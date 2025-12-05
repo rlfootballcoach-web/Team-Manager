@@ -1,0 +1,5388 @@
+<!doctype html>
+
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Football Factory – Multi Team Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        /* Dark theme defaults */
+        --bg: #020202;
+        --card-bg: #101010;
+        --text: #ffffff;
+        --muted: #aaaaaa;
+        --accent: #e4ff22;
+        --danger: #ff4d4f;
+        --success: #33cc66;
+        --border-subtle: #262626;
+        --border-strong: #444444;
+        --badge-top: #4ade80;
+        --badge-bottom: #f87171;
+        --badge-mid: #facc15;
+      }
+
+      * ,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont,
+          "SF Pro Text", sans-serif;
+        background: radial-gradient(circle at top left, #2a2a2a 0, #050505 40%, #000);
+        color: var(--text);
+      }
+
+      .app {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 32px;
+        border-bottom: 1px solid #222;
+      }
+
+      .logo-area {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand-text {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+      }
+
+      .team-text {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .nav-item {
+        background: none;
+        border: none;
+        color: var(--text);
+        font-size: 15px;
+        cursor: pointer;
+        padding: 4px 0;
+        position: relative;
+      }
+
+      .nav-item-active {
+        color: var(--accent);
+      }
+
+      .nav-item-active::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 100%;
+        height: 2px;
+        background: var(--accent);
+        border-radius: 999px;
+      }
+
+      .content {
+        padding: 24px 32px 40px;
+        flex: 1;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        grid-auto-rows: minmax(0, auto);
+      }
+
+      .card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 18px 20px;
+        border: 1px solid var(--border-subtle);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
+      }
+
+      .column {
+        min-height: 180px;
+      }
+
+      .players-card {
+        grid-column: 1 / 4;
+      }
+
+      .card-title {
+        margin: 0 0 12px;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 30px;
+      }
+
+      .stat-number {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .stat-label {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .subcard {
+        border-radius: 16px;
+        border: 1px solid #333;
+        padding: 14px 16px;
+      }
+
+      .session-type {
+        margin: 0 0 6px;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .session-time {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .session-field {
+        margin: 4px 0 4px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .session-location {
+        margin: 0 0 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .session-divider {
+        height: 1px;
+        background: #222;
+        margin: 8px 0 10px;
+      }
+
+      .session-player {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .session-focus {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .weather-card {
+        margin-top: 12px;
+        font-size: 13px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .weather-main {
+        font-weight: 600;
+      }
+
+      .weather-icon {
+        font-size: 22px;
+      }
+
+      .next-list {
+        margin-top: 16px;
+        font-size: 13px;
+      }
+
+      .next-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        border-bottom: 1px solid #181818;
+        gap: 8px;
+      }
+
+      .next-item:last-child {
+        border-bottom: none;
+      }
+
+      .primary-btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+        background: rgba(228, 255, 34, 0.08);
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        color: var(--accent);
+        padding: 8px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .primary-btn:hover {
+        background: rgba(228, 255, 34, 0.16);
+      }
+
+      .btn-small {
+        border-radius: 999px;
+        border: 1px solid var(--accent);
+        background: rgba(228, 255, 34, 0.08);
+        color: var(--accent);
+        font-size: 13px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+
+      .btn-danger {
+        border-radius: 999px;
+        border: 1px solid var(--danger);
+        background: rgba(255, 77, 79, 0.1);
+        color: var(--danger);
+        font-size: 11px;
+        padding: 3px 8px;
+        cursor: pointer;
+      }
+
+      .players-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .players-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .players-table thead th {
+        text-align: left;
+        padding: 8px 0;
+        color: var(--muted);
+        font-weight: 500;
+        border-bottom: 1px solid #242424;
+      }
+
+      .players-table tbody td {
+        padding: 8px 0;
+        border-bottom: 1px solid #181818;
+      }
+
+      .player-name {
+        font-weight: 600;
+      }
+
+      .player-injured {
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .attendance-top {
+        color: var(--badge-top);
+        font-weight: 700;
+      }
+
+      .attendance-bottom {
+        color: var(--badge-bottom);
+        font-weight: 700;
+      }
+
+      .form {
+        margin-bottom: 20px;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        font-size: 13px;
+      }
+
+      .form-group label {
+        margin-bottom: 4px;
+        color: var(--muted);
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        background: #050505;
+        border-radius: 8px;
+        border: 1px solid var(--border-subtle);
+        padding: 6px 8px;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .form-group textarea {
+        min-height: 60px;
+        resize: vertical;
+      }
+
+      .form-actions {
+        margin-top: 6px;
+      }
+
+      .badge {
+        border-radius: 999px;
+        padding: 2px 8px;
+        border: 1px solid #333;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+
+      .profile-layout {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .profile-left {
+        flex: 0 0 260px;
+      }
+
+      .profile-right {
+        flex: 1 1 320px;
+        min-width: 280px;
+      }
+
+      .avatar-large {
+        width: 180px;
+        height: 180px;
+        border-radius: 24px;
+        object-fit: cover;
+        background: #050505;
+        border: 1px solid #333;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .profile-name {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+
+      .profile-meta {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 12px;
+      }
+
+      .profile-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 14px;
+        margin-bottom: 6px;
+      }
+
+      .performance-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      .performance-table th,
+      .performance-table td {
+        border-bottom: 1px solid #181818;
+        padding: 4px 0;
+        text-align: left;
+      }
+
+      .report-textarea {
+        width: 100%;
+        min-height: 140px;
+        margin-top: 6px;
+        background: #050505;
+        color: var(--text);
+        border-radius: 8px;
+        border: 1px solid #333;
+        padding: 6px 8px;
+        font-size: 12px;
+        resize: vertical;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+      }
+
+      .modal {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid #444;
+        padding: 20px;
+        max-width: 900px;
+        width: 100%;
+        max-height: 80vh;
+        overflow: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .modal-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .modal-close {
+        border: none;
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 18px;
+      }
+
+      .modal-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 10px;
+        margin-bottom: 4px;
+      }
+
+      .pill {
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        border: 1px solid #333;
+      }
+
+      .pill-danger {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
+      .pill-success {
+        border-color: var(--success);
+        color: var(--success);
+      }
+
+      .settings-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .calendar-month {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border-subtle);
+        padding: 14px 16px 16px;
+      }
+
+      .calendar-month-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .calendar-month-title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .calendar-month-nav {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .calendar-nav-btn {
+        border-radius: 999px;
+        border: 1px solid var(--border-strong);
+        background: #050505;
+        color: var(--text);
+        font-size: 12px;
+        padding: 4px 8px;
+        cursor: pointer;
+      }
+
+      .calendar-month-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 4px;
+        margin-top: 4px;
+      }
+
+      .calendar-weekday {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-align: center;
+        margin-bottom: 4px;
+      }
+
+      .calendar-cell {
+        min-height: 100px;
+        border-radius: 8px;
+        background: #050505;
+        border: 1px solid #181818;
+        padding: 4px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .calendar-cell-outside {
+        background: #020202;
+        color: #666;
+      }
+
+      .calendar-cell-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2px;
+      }
+
+      .calendar-cell-day {
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .calendar-cell-events {
+        flex: 1;
+        overflow: hidden;
+      }
+
+      .calendar-event {
+        font-size: 10px;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-bottom: 2px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .calendar-event-training {
+        background: rgba(228, 255, 34, 0.12);
+        border: 1px solid rgba(228, 255, 34, 0.4);
+      }
+
+      .calendar-event-match {
+        background: rgba(37, 99, 235, 0.18);
+        border: 1px solid rgba(37, 99, 235, 0.5);
+      }
+
+      .calendar-event-tournament {
+        background: rgba(168, 85, 247, 0.18);
+        border: 1px solid rgba(168, 85, 247, 0.5);
+      }
+
+      .calendar-event-teambuilding {
+        background: rgba(16, 185, 129, 0.18);
+        border: 1px solid rgba(16, 185, 129, 0.5);
+      }
+
+      .calendar-event-note {
+        background: rgba(249, 115, 22, 0.18);
+        border: 1px solid rgba(249, 115, 22, 0.5);
+      }
+
+      .calendar-event-title {
+        font-weight: 600;
+      }
+
+      .calendar-event-sub {
+        font-size: 9px;
+      }
+
+      .calendar-event-status {
+        font-size: 9px;
+      }
+
+      .calendar-event-confirmed {
+        border-color: rgba(34, 197, 94, 0.7);
+      }
+
+      .calendar-event-unconfirmed {
+        border-color: rgba(248, 113, 113, 0.7);
+      }
+
+      /* Generic select & option colors so text is visible */
+      select {
+        background-color: #050505;
+        color: var(--text);
+      }
+
+      select option {
+        background-color: #f9fafb;
+        color: #111111;
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .players-card {
+          grid-column: 1 / 2;
+        }
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- React + ReactDOM + Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Supabase client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://zblwysrjlfmbcqocemgl.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpibHd5c3JqbGZtYmNxb2NlbWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MzExNjYsImV4cCI6MjA4MDAwNzE2Nn0.e6QYJu-azAF7kqVpe2SytjkeSYE1zarnX85v1JxD8_0";
+        
+        // Global client – we’ll use this inside React code
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      </script>
+        
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      const TEAM_CATEGORY_DEFAULT = "U13";
+
+      // ---- Helpers ----
+      function toDateTime(t) {
+        return new Date(`${t.date}T${t.time || "00:00"}`);
+      }
+
+      function compareDateTime(a, b) {
+        return toDateTime(a) - toDateTime(b);
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return "";
+        const [y, m, d] = dateStr.split("-");
+        return `${d}.${m}.${y}`;
+      }
+
+      function getYearMonth(dateStr) {
+        const [y, m] = dateStr.split("-");
+        return `${y}-${m}`;
+      }
+
+      function monthName(year, monthIndex) {
+        return new Date(year, monthIndex, 1).toLocaleString("en", {
+          month: "long",
+          year: "numeric",
+        });
+      }
+
+      function isPlayerPresent(session, playerId) {
+        const pa =
+          (session.playerAttendance && session.playerAttendance[playerId]) ||
+          null;
+        if (pa && pa.present === false) return false;
+        return session.playerIds.includes(playerId);
+      }
+
+      function formBadgeClass(value) {
+        if (value == null) return "";
+        if (value <= 4) return "pill pill-danger";
+        if (value <= 6) return "pill";
+        return "pill pill-success";
+      }
+
+      // ---- EMPTY INITIAL DATA FOR CLEAN TEST VERSION ----
+      const initialPlayers = [];
+      const initialTeams = [];
+      const initialStaff = [];
+      const initialTrainings = [];
+
+      const TABS = [
+        "Dashboard",
+        "Teams",
+        "Players",
+        "Training",
+        "Calendar",
+        "Statistics",
+        "Settings",
+      ];
+
+      const defaultSettings = {
+        theme: "dark",
+        statsSportApiByTeam: {}, // { teamId: { url, status } }
+      };
+
+      // ---- MAIN APP ----
+      function App() {
+        const [activeTab, setActiveTab] = useState("Dashboard");
+        const [players, setPlayers] = useState(initialPlayers);
+        const [teams, setTeams] = useState(initialTeams);
+        const [staff, setStaff] = useState(initialStaff);
+        const [trainings, setTrainings] = useState(initialTrainings);
+        const [settings, setSettings] = useState(defaultSettings);
+        const [selectedTeamId, setSelectedTeamId] = useState(null);
+        const [uiFlags, setUiFlags] = useState({});
+        const [selectedPlayerId, setSelectedPlayerId] = useState(null);
+        const [selectedEventId, setSelectedEventId] = useState(null);
+        const [calendarNotes, setCalendarNotes] = useState({});
+        const [staffInvitations, setStaffInvitations] = useState([]);
+
+        // ---- INITIAL LOAD FROM SUPABASE ----
+        useEffect(() => {
+          async function loadInitialData() {
+            try {
+              // 1) Players
+              const { data: playersData, error: playersError } =
+                await supabaseClient
+                  .from("players")
+                  .select("*")
+                  .order("full_name", { ascending: true });
+
+              if (playersError) {
+                console.error("Error loading players:", playersError);
+              } else {
+                const mappedPlayers = playersData.map((row) => ({
+                id: row.id,
+                name: row.full_name,
+                club: "Senec Football Academy",
+                category: row.category || TEAM_CATEGORY_DEFAULT,
+                age: null,
+                birthDate: row.birth_date || "",
+                number: row.shirt_number || "",
+                position: row.primary_position || row.position || "",
+                parentContact: row.parent_phone || "",
+                parentEmail: row.parent_email || "",
+                photo: row.photo_url || null,
+                injured: row.injured || false,
+                injuryNote: row.injury_note || "",
+                injuryUntil: row.injury_until || "",
+                gpsId: row.gps_device_id || "",
+                bio: row.bio || "",
+                teamIds: row.team_ids || [],
+              }));
+              setPlayers(mappedPlayers);
+             }
+            
+              // 2) Teams
+              const { data: teamsData, error: teamsError } =
+                await supabaseClient
+                  .from("teams")
+                  .select("*")
+                  .order("name", { ascending: true });
+
+              if (teamsError) {
+                console.error("Error loading teams:", teamsError);
+              } else {
+                const mappedTeams = teamsData.map((row) => ({
+                  id: row.id,
+                  name: row.name,
+                  category: row.category || TEAM_CATEGORY_DEFAULT,
+                  coachId: row.coach_id || null,
+                  assistantCoachId: row.assistant_coach_id || null,
+                }));
+                setTeams(mappedTeams);
+                if (!selectedTeamId && mappedTeams.length > 0) {
+                  setSelectedTeamId(mappedTeams[0].id);
+                }
+              }
+
+              // 3) Staff
+const { data: staffData, error: staffError } =
+  await supabaseClient
+    .from("staff")
+    .select("*")
+    // ✅ order by full_name (or fall back if you later add name)
+    .order("full_name", { ascending: true });
+
+if (staffError) {
+  console.error("Error loading staff:", staffError);
+} else {
+  const mappedStaff = staffData.map((row) => ({
+    id: row.id,
+    // ✅ handle either full_name or name
+    name: row.full_name || row.name || "",
+    role: row.role || "Coach",
+    phone: row.phone || "",
+    email: row.email || "",
+  }));
+  setStaff(mappedStaff);
+}
+
+// 4) Events / trainings
+                const { data: eventsData, error: eventsError } =
+                await supabaseClient
+                  .from("events")
+                  .select("*")
+                  .order("date", { ascending: true })
+                  .order("time", { ascending: true });
+
+              if (eventsError) {
+                console.error("Error loading events:", eventsError);
+              } else {
+                const mappedEvents = eventsData.map((row) => ({
+                  id: row.id,
+                  teamId: row.team_id,
+                  type: row.type,
+                  date: row.date,
+                  time: row.time || "",
+                  duration: row.duration || 90,
+                  field: row.field || "Home pitch",
+                  location: row.location || "",
+                  focus: Array.isArray(row.focus)
+                    ? row.focus
+                    : row.focus
+                    ? String(row.focus)
+                        .split(",")
+                        .map((f) => f.trim())
+                        .filter(Boolean)
+                    : ["general"],
+                  playerIds: Array.isArray(row.player_ids)
+                    ? row.player_ids
+                    : row.player_ids || [],
+                  playerMinutes: row.player_minutes || {},
+                  playerAttendance: row.player_attendance || {},
+                  playerRatings: row.player_ratings || {},
+                  gps: row.gps || {},
+                  weather: row.weather || null,
+                  homeScore: row.home_score,
+                  awayScore: row.away_score,
+                  matchScorers: row.match_scorers || "",
+                  matchCards: row.match_cards || "",
+                  attendanceConfirmed: !!row.attendance_confirmed,
+                  confirmedByRole: row.confirmed_by_role || null,
+                }));
+
+                setTrainings(mappedEvents);
+              }
+            } catch (e) {
+              console.error("Unexpected error loading initial data:", e);
+            }
+          }
+
+          loadInitialData();
+        }, []);
+
+        // pick first team automatically when created (also reacts to DB-loaded teams)
+        useEffect(() => {
+          if (!selectedTeamId && teams.length > 0) {
+            setSelectedTeamId(teams[0].id);
+          }
+        }, [teams, selectedTeamId]);
+
+        // apply theme from settings
+        useEffect(() => {
+          applyTheme(settings.theme || "dark");
+        }, [settings.theme]);
+
+        const applyTheme = (theme) => {
+          const root = document.documentElement;
+          if (theme === "light") {
+            root.style.setProperty("--bg", "#f3f4f6");
+            root.style.setProperty("--card-bg", "#ffffff");
+            root.style.setProperty("--text", "#111827");
+            root.style.setProperty("--muted", "#6b7280");
+            root.style.setProperty("--border-subtle", "#e5e7eb");
+            root.style.setProperty("--border-strong", "#9ca3af");
+          } else {
+            root.style.setProperty("--bg", "#020202");
+            root.style.setProperty("--card-bg", "#101010");
+            root.style.setProperty("--text", "#ffffff");
+            root.style.setProperty("--muted", "#aaaaaa");
+            root.style.setProperty("--border-subtle", "#262626");
+            root.style.setProperty("--border-strong", "#444444");
+          }
+        };
+
+        const selectedTeam =
+          teams.find((t) => t.id === selectedTeamId) || null;
+        const selectedEvent =
+          selectedEventId != null
+            ? trainings.find((t) => t.id === selectedEventId)
+            : null;
+
+        const handleNavigate = (tab, flags = {}) => {
+          setActiveTab(tab);
+          setUiFlags(flags);
+          if (tab !== "Players") setSelectedPlayerId(null);
+        };
+
+        const handleQuickAction = (action) => {
+          if (action === "addPlayer") {
+            handleNavigate("Players", { openPlayerForm: true });
+          } else if (action === "addSession") {
+            handleNavigate("Training", { openTrainingForm: true });
+          } else if (action === "addCoach") {
+            handleNavigate("Teams", { openStaffForm: true });
+          }
+        };
+
+        // ---- Players ----
+        // ---- Players ----
+const handleAddPlayer = async (data) => {
+  const payload = {
+    full_name: data.name,
+    birth_date: data.birthDate || null,
+    category: data.category || null,
+    shirt_number: data.number ? Number(data.number) : null,
+    // prefer position / position1 if you use both fields
+    primary_position: data.position || data.position1 || null,
+    parent_phone: data.parentContact || null,
+    parent_email: data.parentEmail || null,
+    gps_device_id: data.gpsId || null,
+    bio: data.bio || null,
+    // ✅ persist team assignment in DB
+    team_ids: data.teamIds || [],
+  };
+
+  console.log("SENDING TO SUPABASE:", payload);
+
+  const { data: inserted, error } = await supabaseClient
+    .from("players")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("SUPABASE INSERT ERROR:", error);
+    alert("Supabase error: " + error.message);
+    return;
+  }
+
+  alert("Player saved successfully!");
+
+  const newPlayer = {
+    id: inserted.id,
+    name: inserted.full_name,
+    club: "Senec Football Academy",
+    category: inserted.category || TEAM_CATEGORY_DEFAULT,
+    age: null,
+    birthDate: inserted.birth_date || "",
+    number: inserted.shirt_number || "",
+    position: inserted.primary_position || "",
+    parentContact: inserted.parent_phone || "",
+    parentEmail: inserted.parent_email || "",
+    gpsId: inserted.gps_device_id || "",
+    bio: inserted.bio || "",
+    photo: inserted.photo_url || null,
+    injured: inserted.injured || false,
+    injuryNote: inserted.injury_note || "",
+    injuryUntil: inserted.injury_until || "",
+    // ✅ synced with DB
+    teamIds: inserted.team_ids || [],
+  };
+
+  setPlayers((prev) => [...prev, newPlayer]);
+};
+
+
+        const handleUpdatePlayer = (updated) => {
+          // (optional) you can also push updates to Supabase here
+          setPlayers((prev) =>
+            prev.map((p) => (p.id === updated.id ? updated : p))
+          );
+        };
+
+        const handleDeletePlayer = async (playerId) => {
+          if (!window.confirm("Delete this player from database?")) return;
+
+          const { error } = await supabaseClient
+            .from("players")
+            .delete()
+            .eq("id", playerId);
+
+          if (error) {
+            console.error("Error deleting player:", error);
+            alert("Failed to delete player: " + error.message);
+            return;
+          }
+
+          setPlayers((prev) => prev.filter((p) => p.id !== playerId));
+          setTrainings((prev) =>
+            prev.map((t) => {
+              if (!t.playerIds.includes(playerId)) return t;
+              const newPlayerIds = t.playerIds.filter((id) => id !== playerId);
+              const pm = { ...(t.playerMinutes || {}) };
+              const pa = { ...(t.playerAttendance || {}) };
+              const pr = { ...(t.playerRatings || {}) };
+              delete pm[playerId];
+              delete pa[playerId];
+              delete pr[playerId];
+              return {
+                ...t,
+                playerIds: newPlayerIds,
+                playerMinutes: pm,
+                playerAttendance: pa,
+                playerRatings: pr,
+              };
+            })
+          );
+          if (selectedPlayerId === playerId) setSelectedPlayerId(null);
+        };
+
+        // ---- Teams ----
+        const handleAddTeam = async (teamData) => {
+          const payload = {
+            name: teamData.name,
+            category: teamData.category || TEAM_CATEGORY_DEFAULT,
+            coach_id: teamData.coachId || null,
+            assistant_coach_id: teamData.assistantCoachId || null,
+          };
+
+          const { data: inserted, error } = await supabaseClient
+            .from("teams")
+            .insert(payload)
+            .select("*")
+            .single();
+
+          if (error) {
+            console.error("Error inserting team:", error);
+            alert("Failed to save team: " + error.message);
+            return;
+          }
+
+          const newTeam = {
+            id: inserted.id,
+            name: inserted.name,
+            category: inserted.category || TEAM_CATEGORY_DEFAULT,
+            coachId: inserted.coach_id || null,
+            assistantCoachId: inserted.assistant_coach_id || null,
+          };
+
+          setTeams((prev) => [...prev, newTeam]);
+          setSelectedTeamId(newTeam.id);
+        };
+
+        const handleUpdateTeam = async (updated) => {
+          const payload = {
+            name: updated.name,
+            category: updated.category,
+            coach_id: updated.coachId || null,
+            assistant_coach_id: updated.assistantCoachId || null,
+          };
+
+          const { data: saved, error } = await supabaseClient
+            .from("teams")
+            .update(payload)
+            .eq("id", updated.id)
+            .select("*")
+            .single();
+
+          if (error) {
+            console.error("Error updating team:", error);
+            alert("Failed to update team: " + error.message);
+            return;
+          }
+
+          const mapped = {
+            id: saved.id,
+            name: saved.name,
+            category: saved.category || TEAM_CATEGORY_DEFAULT,
+            coachId: saved.coach_id || null,
+            assistantCoachId: saved.assistant_coach_id || null,
+          };
+
+          setTeams((prev) => prev.map((t) => (t.id === mapped.id ? mapped : t)));
+        };
+
+        const handleDeleteTeam = async (teamId) => {
+          if (
+            !window.confirm(
+              "Delete this team and its sessions? Players will remain in the database."
+            )
+          )
+            return;
+
+          const { error } = await supabaseClient
+            .from("teams")
+            .delete()
+            .eq("id", teamId);
+
+          if (error) {
+            console.error("Error deleting team:", error);
+            alert("Failed to delete team: " + error.message);
+            return;
+          }
+
+          // optionally also delete related events
+          await supabaseClient.from("events").delete().eq("team_id", teamId);
+
+          setTeams((prev) => prev.filter((t) => t.id !== teamId));
+          setTrainings((prev) => prev.filter((t) => t.teamId !== teamId));
+          if (selectedTeamId === teamId) setSelectedTeamId(null);
+        };
+
+        const handleTeamChange = (e) => {
+          const id = Number(e.target.value);
+          setSelectedTeamId(id);
+        };
+
+        // ---- Staff ----
+const handleAddStaff = async (staffData) => {
+  const payload = {
+    // ✅ use full_name to match your staff table
+    full_name: staffData.name || "",
+    role: staffData.role || "Coach",
+    phone: staffData.phone || "",
+    email: staffData.email || "",
+  };
+
+  const { data: inserted, error } = await supabaseClient
+    .from("staff")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error inserting staff:", error);
+    alert("Failed to save coach: " + error.message);
+    return;
+  }
+
+  const newStaff = {
+    id: inserted.id,
+    // ✅ tolerate either full_name or name coming back
+    name: inserted.full_name || inserted.name || "",
+    role: inserted.role || "Coach",
+    phone: inserted.phone || "",
+    email: inserted.email || "",
+  };
+
+  setStaff((prev) => [...prev, newStaff]);
+};
+
+const handleDeleteStaff = async (staffId) => {
+  if (!window.confirm("Remove this coach from staff list?")) return;
+
+  const { error } = await supabaseClient
+    .from("staff")
+    .delete()
+    .eq("id", staffId);
+
+  if (error) {
+    console.error("Error deleting staff:", error);
+    alert("Failed to delete coach: " + error.message);
+    return;
+  }
+
+  setStaff((prev) => prev.filter((s) => s.id !== staffId));
+  setTeams((prev) =>
+    prev.map((t) => ({
+      ...t,
+      coachId: t.coachId === staffId ? null : t.coachId,
+      assistantCoachId:
+        t.assistantCoachId === staffId ? null : t.assistantCoachId,
+    }))
+  );
+};
+
+
+        // ---- Trainings / events ----
+        const handleAddTraining = async (trainingData) => {
+          if (!trainingData.teamId && !selectedTeam) {
+            alert("Please create a team first.");
+            return;
+          }
+          const teamId = trainingData.teamId ?? selectedTeam.id;
+          const teamPlayers = players.filter(
+            (p) => p.teamIds && p.teamIds.includes(teamId)
+          );
+          const baseIds =
+            trainingData.playerIds && trainingData.playerIds.length
+              ? trainingData.playerIds
+              : teamPlayers.map((p) => p.id);
+
+          const duration = trainingData.duration || 90;
+          const playerMinutes = {};
+          baseIds.forEach((id) => {
+            playerMinutes[id] = duration;
+          });
+
+          const payload = {
+            team_id: teamId,
+            type: trainingData.type || "Training",
+            date: trainingData.date,
+            time: trainingData.time || "",
+            duration,
+            field: trainingData.field || "Home pitch",
+            location: trainingData.location || "",
+            focus: trainingData.focus || ["general"],
+            player_ids: baseIds,
+            player_minutes: playerMinutes,
+            player_attendance: {},
+            player_ratings: {},
+            gps: {},
+            weather: null,
+            home_score:
+              trainingData.type === "Match game"
+                ? trainingData.homeScore ?? null
+                : null,
+            away_score:
+              trainingData.type === "Match game"
+                ? trainingData.awayScore ?? null
+                : null,
+            match_scorers: "",
+            match_cards: "",
+            attendance_confirmed: false,
+            confirmed_by_role: null,
+          };
+
+          const { data: inserted, error } = await supabaseClient
+            .from("events")
+            .insert(payload)
+            .select("*")
+            .single();
+
+          if (error) {
+            console.error("Error inserting event:", error);
+            alert("Failed to save event: " + error.message);
+            return;
+          }
+
+          const newEvent = {
+            id: inserted.id,
+            teamId: inserted.team_id,
+            type: inserted.type,
+            date: inserted.date,
+            time: inserted.time || "",
+            duration: inserted.duration || 90,
+            field: inserted.field || "Home pitch",
+            location: inserted.location || "",
+            focus: Array.isArray(inserted.focus)
+              ? inserted.focus
+              : inserted.focus
+              ? String(inserted.focus)
+                  .split(",")
+                  .map((f) => f.trim())
+                  .filter(Boolean)
+              : ["general"],
+            playerIds: Array.isArray(inserted.player_ids)
+              ? inserted.player_ids
+              : inserted.player_ids || [],
+            playerMinutes: inserted.player_minutes || {},
+            playerAttendance: inserted.player_attendance || {},
+            playerRatings: inserted.player_ratings || {},
+            gps: inserted.gps || {},
+            weather: inserted.weather || null,
+            homeScore: inserted.home_score,
+            awayScore: inserted.away_score,
+            matchScorers: inserted.match_scorers || "",
+            matchCards: inserted.match_cards || "",
+            attendanceConfirmed: !!inserted.attendance_confirmed,
+            confirmedByRole: inserted.confirmed_by_role || null,
+          };
+
+          setTrainings((prev) => [...prev, newEvent].sort(compareDateTime));
+        };
+
+        const handleAddTrainingsBulk = async (arr) => {
+          // simple dev version: sequentially insert each one
+          for (const t of arr) {
+            // eslint-disable-next-line no-await-in-loop
+            await handleAddTraining(t);
+          }
+        };
+
+        const handleDeleteTraining = async (id) => {
+          if (!window.confirm("Cancel this session/match?")) return;
+
+          const { error } = await supabaseClient
+            .from("events")
+            .delete()
+            .eq("id", id);
+
+          if (error) {
+            console.error("Error deleting event:", error);
+            alert("Failed to delete event: " + error.message);
+            return;
+          }
+
+          setTrainings((prev) => prev.filter((t) => t.id !== id));
+          if (selectedEventId === id) setSelectedEventId(null);
+        };
+
+        const handleUpdateTraining = async (updated) => {
+          const payload = {
+            team_id: updated.teamId,
+            type: updated.type,
+            date: updated.date,
+            time: updated.time,
+            duration: updated.duration,
+            field: updated.field,
+            location: updated.location,
+            focus: updated.focus,
+            player_ids: updated.playerIds,
+            player_minutes: updated.playerMinutes,
+            player_attendance: updated.playerAttendance || {},
+            player_ratings: updated.playerRatings || {},
+            gps: updated.gps || {},
+            weather: updated.weather || null,
+            home_score: updated.homeScore,
+            away_score: updated.awayScore,
+            match_scorers: updated.matchScorers,
+            match_cards: updated.matchCards,
+            attendance_confirmed: updated.attendanceConfirmed,
+            confirmed_by_role: updated.confirmedByRole,
+          };
+
+          const { data: saved, error } = await supabaseClient
+            .from("events")
+            .update(payload)
+            .eq("id", updated.id)
+            .select("*")
+            .single();
+
+          if (error) {
+            console.error("Error updating event:", error);
+            alert("Failed to update event: " + error.message);
+            return;
+          }
+
+          const mapped = {
+            id: saved.id,
+            teamId: saved.team_id,
+            type: saved.type,
+            date: saved.date,
+            time: saved.time || "",
+            duration: saved.duration || 90,
+            field: saved.field || "Home pitch",
+            location: saved.location || "",
+            focus: Array.isArray(saved.focus)
+              ? saved.focus
+              : saved.focus
+              ? String(saved.focus)
+                  .split(",")
+                  .map((f) => f.trim())
+                  .filter(Boolean)
+              : ["general"],
+            playerIds: Array.isArray(saved.player_ids)
+              ? saved.player_ids
+              : saved.player_ids || [],
+            playerMinutes: saved.player_minutes || {},
+            playerAttendance: saved.player_attendance || {},
+            playerRatings: saved.player_ratings || {},
+            gps: saved.gps || {},
+            weather: saved.weather || null,
+            homeScore: saved.home_score,
+            awayScore: saved.away_score,
+            matchScorers: saved.match_scorers || "",
+            matchCards: saved.match_cards || "",
+            attendanceConfirmed: !!saved.attendance_confirmed,
+            confirmedByRole: saved.confirmed_by_role || null,
+          };
+
+          setTrainings((prev) =>
+            prev.map((t) => (t.id === mapped.id ? mapped : t)).sort(compareDateTime)
+          );
+        };
+
+        // ---- GPS Import Helpers (unchanged, still works on trainings state) ----
+        const parseAndImportGpsText = (text) => {
+          const lines = text
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+          if (lines.length === 0) return;
+
+          const isJson = /^[\[{]/.test(lines[0]);
+          if (isJson) {
+            try {
+              const obj = JSON.parse(text);
+              const arr = Array.isArray(obj) ? obj : obj.data || [];
+              importGpsRecords(arr, "json");
+            } catch (err) {
+              console.error(err);
+              alert("Invalid JSON GPS data.");
+            }
+          } else {
+            importGpsRecords(lines, "csv");
+          }
+        };
+
+        const importGpsRecords = (data, kind) => {
+          const updatesByTrainingId = {};
+
+          const parseDate = (raw) => {
+            const t = String(raw).trim();
+            let m;
+            if ((m = t.match(/^(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})$/))) {
+              const [_, y, mo, d] = m;
+              return `${y}-${String(mo).padStart(2, "0")}-${String(
+                d
+              ).padStart(2, "0")}`;
+            }
+            if ((m = t.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/))) {
+              const [_, d, mo, y] = m;
+              return `${y}-${String(mo).padStart(2, "0")}-${String(
+                d
+              ).padStart(2, "0")}`;
+            }
+            return null;
+          };
+
+          const findPlayerByGpsIdOrName = (gpsId, name) => {
+            if (gpsId) {
+              const p = players.find(
+                (pl) => pl.gpsId && pl.gpsId.toString() === gpsId.toString()
+              );
+              if (p) return p;
+            }
+            if (name) {
+              const lower = name.toLowerCase();
+              const p = players.find((pl) => pl.name.toLowerCase() === lower);
+              if (p) return p;
+            }
+            return null;
+          };
+
+          if (kind === "csv") {
+            let headerLine = data[0];
+            const delimiter = headerLine.includes(";") ? ";" : ",";
+            const headers = headerLine
+              .split(delimiter)
+              .map((h) => h.trim().toLowerCase());
+
+            const idx = (names) =>
+              headers.findIndex((h) => names.includes(h));
+
+            const idxGpsId = idx(["gpsid", "gps_id", "deviceid"]);
+            const idxPlayer = idx(["player", "name"]);
+            const idxDate = idx(["date", "datum", "dátum"]);
+            const idxDist = idx(["distance", "dist", "totaldistance"]);
+            const idxSprints = idx(["sprints", "sprint"]);
+            const idxMaxSpeed = idx(["maxspeed", "top speed", "topspeed"]);
+            const idxHsr = idx(["hsr", "highspeedrunning", "hsr_km"]);
+
+            for (let i = 1; i < data.length; i++) {
+              const row = data[i];
+              const parts = row.split(delimiter).map((p) => p.trim());
+              const get = (i) => (i >= 0 ? parts[i] : "");
+              const gpsId = get(idxGpsId);
+              const playerName = get(idxPlayer);
+              const dateIso = parseDate(get(idxDate));
+              if (!dateIso) continue;
+
+              const player = findPlayerByGpsIdOrName(gpsId, playerName);
+              if (!player) continue;
+
+              const distance = parseFloat(get(idxDist));
+              const sprints = parseFloat(get(idxSprints));
+              const maxSpeed = parseFloat(get(idxMaxSpeed));
+              const hsrVal = idxHsr >= 0 ? parseFloat(get(idxHsr)) : null;
+              if (isNaN(distance) || isNaN(sprints) || isNaN(maxSpeed)) continue;
+
+              const training = trainings.find((t) => t.date === dateIso);
+              if (!training) continue;
+
+              if (!updatesByTrainingId[training.id]) {
+                updatesByTrainingId[training.id] = [];
+              }
+              updatesByTrainingId[training.id].push({
+                playerId: player.id,
+                distance,
+                sprints,
+                maxSpeed,
+                hsr: isNaN(hsrVal) ? null : hsrVal,
+              });
+            }
+          } else if (kind === "json") {
+            const arr = data;
+            for (const rec of arr) {
+              const gpsId =
+                rec.gpsId || rec.gps_id || rec.deviceId || rec.device_id || "";
+              const playerName = rec.player || rec.name || "";
+              const dateIso = parseDate(rec.date || rec.sessionDate);
+              if (!dateIso) continue;
+
+              const player = findPlayerByGpsIdOrName(gpsId, playerName);
+              if (!player) continue;
+
+              const distance = parseFloat(
+                rec.distance || rec.totalDistance || rec.dist
+              );
+              const sprints = parseFloat(rec.sprints || rec.sprintCount);
+              const maxSpeed = parseFloat(rec.maxSpeed || rec.topSpeed);
+              const hsrVal = rec.hsr || rec.highSpeedRunning || null;
+              if (isNaN(distance) || isNaN(sprints) || isNaN(maxSpeed)) continue;
+
+              const training = trainings.find((t) => t.date === dateIso);
+              if (!training) continue;
+
+              if (!updatesByTrainingId[training.id]) {
+                updatesByTrainingId[training.id] = [];
+              }
+              updatesByTrainingId[training.id].push({
+                playerId: player.id,
+                distance,
+                sprints,
+                maxSpeed,
+                hsr:
+                  hsrVal == null || isNaN(parseFloat(hsrVal))
+                    ? null
+                    : parseFloat(hsrVal),
+              });
+            }
+          }
+
+          const trainingIds = Object.keys(updatesByTrainingId);
+          if (trainingIds.length === 0) {
+            alert("No matching sessions found for given GPS data.");
+            return;
+          }
+
+          setTrainings((prev) =>
+            prev.map((t) => {
+              const ups = updatesByTrainingId[t.id];
+              if (!ups) return t;
+              const newGps = { ...(t.gps || {}) };
+              ups.forEach((u) => {
+                newGps[u.playerId] = {
+                  distance: u.distance,
+                  sprints: u.sprints,
+                  maxSpeed: u.maxSpeed,
+                  ...(newGps[u.playerId] || {}),
+                  hsr: u.hsr != null ? u.hsr : (newGps[u.playerId] || {}).hsr,
+                };
+              });
+              return { ...t, gps: newGps };
+            })
+          );
+          alert("GPS data imported and linked via GPS ID / player name.");
+        };
+
+        const handleImportGpsCsv = (text) => {
+          parseAndImportGpsText(text);
+        };
+
+        const handleImportGpsFile = (file) => {
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const text = ev.target.result;
+            parseAndImportGpsText(text);
+          };
+          reader.readAsText(file);
+        };
+
+        // ---- Calendar notes ----
+        const handleUpdateCalendarNotes = (notes) => {
+          setCalendarNotes(notes);
+        };
+
+        // ---- Settings: theme + per-team API + invitations ----
+        const updateSettings = (patch) => {
+          setSettings((prev) => ({ ...prev, ...patch }));
+        };
+
+        const handleThemeChange = (theme) => {
+          setSettings((prev) => ({ ...prev, theme }));
+        };
+
+        const handleCheckApiForTeam = async (teamId) => {
+          const current = settings.statsSportApiByTeam || {};
+          const prev = current[teamId] || { url: "", status: "unknown" };
+          if (!prev.url) {
+            alert("Enter API URL for this team first.");
+            return;
+          }
+          const next = {
+            ...current,
+            [teamId]: { ...prev, status: "checking" },
+          };
+          setSettings((prevSettings) => ({
+            ...prevSettings,
+            statsSportApiByTeam: next,
+          }));
+
+          try {
+            const res = await fetch(prev.url, { method: "GET" });
+            const ok = res.ok;
+            setSettings((prevSettings) => {
+              const curr = prevSettings.statsSportApiByTeam || {};
+              const again = curr[teamId] || { url: prev.url, status: "error" };
+              return {
+                ...prevSettings,
+                statsSportApiByTeam: {
+                  ...curr,
+                  [teamId]: {
+                    ...again,
+                    status: ok ? "ok" : "error",
+                  },
+                },
+              };
+            });
+          } catch (e) {
+            console.error(e);
+            setSettings((prevSettings) => {
+              const curr = prevSettings.statsSportApiByTeam || {};
+              const again = curr[teamId] || { url: prev.url, status: "error" };
+              return {
+                ...prevSettings,
+                statsSportApiByTeam: {
+                  ...curr,
+                  [teamId]: {
+                    ...again,
+                    status: "error",
+                  },
+                },
+              };
+            });
+          }
+        };
+
+        // Staff invitations: simulate invite links and registration
+        const handleCreateInvitation = ({ email, role, teamId }) => {
+          if (!email) {
+            alert("Enter e-mail first.");
+            return;
+          }
+          const token = Math.random().toString(36).slice(2, 10).toUpperCase();
+          const inv = {
+            id: Date.now(),
+            email,
+            role,
+            teamId: teamId || null,
+            token,
+            status: "pending",
+          };
+          setStaffInvitations((prev) => [...prev, inv]);
+          alert(
+            "Invitation created. Copy the link and send it to the coach:\n\n" +
+              invitationLinkFromToken(token)
+          );
+        };
+
+        const invitationLinkFromToken = (token) =>
+          `https://football-factory.app/invite/${token}`;
+
+        const handleRegisterFromInvitation = async (invitationId, name) => {
+  // Mark invitation as registered in local state
+  setStaffInvitations((prev) =>
+    prev.map((i) =>
+      i.id === invitationId ? { ...i, status: "registered" } : i
+    )
+  );
+
+  const inv = staffInvitations.find((i) => i.id === invitationId);
+  if (!inv) return;
+
+  const payload = {
+    name: name || inv.email.split("@")[0],
+    role: inv.role || "Coach",
+    phone: "",
+    email: inv.email,
+  };
+
+  const { data: inserted, error } = await supabaseClient
+    .from("staff")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Error inserting staff from invitation:", error);
+    alert("Failed to register coach: " + error.message);
+    return;
+  }
+
+  const staffMember = {
+    id: inserted.id,
+    name: inserted.name,
+    role: inserted.role || "Coach",
+    phone: inserted.phone || "",
+    email: inserted.email || "",
+  };
+
+  // Add to staff list
+  setStaff((prev) => [...prev, staffMember]);
+
+  // If invitation was linked to a team, attach as coach/assistant and save team
+  if (inv.teamId) {
+    setTeams((prev) =>
+      prev.map((t) => {
+        if (t.id !== inv.teamId) return t;
+        if (!t.coachId) {
+          return { ...t, coachId: staffMember.id };
+        }
+        if (!t.assistantCoachId) {
+          return { ...t, assistantCoachId: staffMember.id };
+        }
+        return t;
+      })
+    );
+
+    // Persist updated team role in Supabase
+    const team = teams.find((t) => t.id === inv.teamId);
+    if (team) {
+      const updated = {
+        ...team,
+        coachId: team.coachId || staffMember.id,
+        assistantCoachId: team.coachId ? staffMember.id : team.assistantCoachId,
+      };
+
+      const payloadTeam = {
+        name: updated.name,
+        category: updated.category,
+        coach_id: updated.coachId || null,
+        assistant_coach_id: updated.assistantCoachId || null,
+      };
+
+      await supabaseClient
+        .from("teams")
+        .update(payloadTeam)
+        .eq("id", updated.id);
+    }
+  }
+};
+
+
+        const selectedPlayer =
+          selectedPlayerId != null
+            ? players.find((p) => p.id === selectedPlayerId)
+            : null;
+
+        const teamTrainings = selectedTeam
+          ? trainings.filter((t) => t.teamId === selectedTeam.id)
+          : [];
+
+        return (
+          <div className="app">
+            <header className="topbar">
+              <div className="logo-area">
+                <div className="brand-text">FOOTBALL FACTORY</div>
+                <div className="team-text">
+                  Multi-team manager –{" "}
+                  {teams.length === 0
+                    ? "no team yet, create one in Teams tab"
+                    : selectedTeam
+                    ? `current: ${selectedTeam.name}`
+                    : "select team from list"}
+                </div>
+              </div>
+
+              <nav className="nav">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab}
+                    className={
+                      "nav-item " + (activeTab === tab ? "nav-item-active" : "")
+                    }
+                    onClick={() => handleNavigate(tab)}
+                  >
+                    {tab}
+                  </button>
+                ))}
+                {teams.length > 0 && (
+                  <select
+                    value={selectedTeamId || ""}
+                    onChange={handleTeamChange}
+                    style={{
+                      borderRadius: "999px",
+                      border: "1px solid var(--border-strong)",
+                      padding: "4px 10px",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {teams.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </nav>
+            </header>
+
+            <main className="content">
+              {activeTab === "Dashboard" &&
+                (selectedTeam ? (
+                  <Dashboard
+                    players={players}
+                    trainings={teamTrainings}
+                    teams={teams}
+                    team={selectedTeam}
+                    onQuickAction={handleQuickAction}
+                  />
+                ) : (
+                  <NoTeamMessage />
+                ))}
+
+              {activeTab === "Teams" && (
+                <TeamsPage
+                  teams={teams}
+                  staff={staff}
+                  players={players}
+                  trainings={trainings}
+                  onAddTeam={handleAddTeam}
+                  onUpdateTeam={handleUpdateTeam}
+                  onDeleteTeam={handleDeleteTeam}
+                  onAddStaff={handleAddStaff}
+                  onDeleteStaff={handleDeleteStaff}
+                  uiFlags={uiFlags}
+                />
+              )}
+
+              {activeTab === "Players" && (
+                <PlayersPage
+                  teams={teams}
+                  players={players}
+                  trainings={trainings}
+                  onAddPlayer={handleAddPlayer}
+                  onUpdatePlayer={handleUpdatePlayer}
+                  onDeletePlayer={handleDeletePlayer}
+                  selectedPlayer={selectedPlayer}
+                  onSelectPlayer={setSelectedPlayerId}
+                  uiFlags={uiFlags}
+                />
+              )}
+
+              {activeTab === "Training" &&
+                (selectedTeam ? (
+                  <TrainingPage
+                    team={selectedTeam}
+                    teams={teams}
+                    players={players}
+                    trainings={teamTrainings}
+                    onAddTraining={handleAddTraining}
+                    onAddTrainingsBulk={handleAddTrainingsBulk}
+                    onDeleteTraining={handleDeleteTraining}
+                    onSelectEvent={setSelectedEventId}
+                    staff={staff}
+                    uiFlags={uiFlags}
+                  />
+                ) : (
+                  <NoTeamMessage />
+                ))}
+
+              {activeTab === "Calendar" &&
+                (selectedTeam ? (
+                  <CalendarPage
+                    team={selectedTeam}
+                    trainings={trainings}
+                    calendarNotes={calendarNotes}
+                    onUpdateCalendarNotes={handleUpdateCalendarNotes}
+                    onDeleteTraining={handleDeleteTraining}
+                    onSelectEvent={setSelectedEventId}
+                  />
+                ) : (
+                  <NoTeamMessage />
+                ))}
+
+              {activeTab === "Statistics" &&
+                (selectedTeam ? (
+                  <StatisticsPage
+                    team={selectedTeam}
+                    teams={teams}
+                    players={players}
+                    trainings={trainings}
+                    onImportGpsCsv={handleImportGpsCsv}
+                    onImportGpsFile={handleImportGpsFile}
+                  />
+                ) : (
+                  <NoTeamMessage />
+                ))}
+
+              {activeTab === "Settings" && (
+                <SettingsPage
+                  teams={teams}
+                  settings={settings}
+                  onThemeChange={handleThemeChange}
+                  onCheckApiForTeam={handleCheckApiForTeam}
+                  staffInvitations={staffInvitations}
+                  onCreateInvitation={handleCreateInvitation}
+                  onRegisterFromInvitation={handleRegisterFromInvitation}
+                />
+              )}
+            </main>
+
+            {selectedEvent && (
+              <EventDetailModal
+                event={selectedEvent}
+                players={players}
+                teams={teams}
+                staff={staff}
+                onClose={() => setSelectedEventId(null)}
+                onSaveEvent={handleUpdateTraining}
+              />
+            )}
+          </div>
+        );
+      }
+
+      // ---- DASHBOARD ----
+      function Dashboard({ players, trainings, teams, team, onQuickAction }) {
+        const sortedAll = [...trainings].sort(compareDateTime);
+        const nextTraining = sortedAll[0];
+        const nextThree = sortedAll.slice(0, 3);
+
+        const confirmedTrainings = trainings.filter((t) => t.attendanceConfirmed);
+
+        const teamPlayers = players.filter((p) =>
+          p.teamIds && p.teamIds.includes(team.id)
+        );
+
+        // counts
+        const totalEvents = confirmedTrainings.length;
+        const trainingEvents = confirmedTrainings.filter(
+          (t) => t.type === "Training" || t.type === "Teambuilding"
+        ).length;
+        const matchEvents = confirmedTrainings.filter((t) =>
+          ["Match game", "Friendly game"].includes(t.type)
+        ).length;
+        const tournamentEvents = confirmedTrainings.filter(
+          (t) => t.type === "Tournament"
+        ).length;
+
+        const totalMinutes = confirmedTrainings.reduce(
+          (sum, t) => sum + (Number(t.duration) || 0),
+          0
+        );
+        const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+        // per player attendance
+        const attendanceStats = teamPlayers.map((p) => {
+          const attended = confirmedTrainings.filter((t) =>
+            isPlayerPresent(t, p.id)
+          ).length;
+          return { player: p, attended };
+        });
+
+        const sortedByAttendance = attendanceStats
+          .slice()
+          .sort((a, b) => b.attended - a.attended);
+
+        const top5Raw = sortedByAttendance.slice(0, 5);
+        const bottom5Raw = sortedByAttendance.slice().reverse().slice(0, 5);
+
+        const top5 = top5Raw.filter((s) => s.attended > 0);
+        const bottom5 = bottom5Raw.filter((s) => s.attended > 0);
+
+        // pending confirmations
+        const pendingConfirmations = trainings
+          .filter((t) => !t.attendanceConfirmed)
+          .sort(compareDateTime)
+          .slice(0, 5);
+
+        // GPS check: players with GPS ID but missing data for last confirmed session
+        const lastConfirmed = confirmedTrainings[confirmedTrainings.length - 1];
+        let gpsMissing = [];
+        if (lastConfirmed) {
+          gpsMissing = teamPlayers.filter(
+            (p) =>
+              p.gpsId &&
+              (!lastConfirmed.gps || !lastConfirmed.gps[p.id])
+          );
+        }
+
+        return (
+          <div className="grid">
+            <section className="card column">
+              <h2 className="card-title">Next session – {team.name}</h2>
+              {nextTraining ? (
+                <>
+                  <div className="subcard">
+                    <p className="session-type">
+                      {nextTraining.type.toUpperCase()}
+                    </p>
+                    <p className="session-time">{nextTraining.time}</p>
+                    <p className="session-field">
+                      {formatDate(nextTraining.date)} • {nextTraining.field}
+                    </p>
+                    <p className="session-location">
+                      Location: {nextTraining.location || "not set"}
+                    </p>
+                    <div className="session-divider" />
+                    <p className="session-player">
+                      Squad size: {nextTraining.playerIds.length} players{" "}
+                      <span
+                        className={
+                          "pill " +
+                          (nextTraining.attendanceConfirmed
+                            ? "pill-success"
+                            : "pill-danger")
+                        }
+                      >
+                        {nextTraining.attendanceConfirmed
+                          ? "Attendance confirmed"
+                          : "Not confirmed"}
+                      </span>
+                    </p>
+                    <p className="session-focus">
+                      Focus: {nextTraining.focus.join(", ")}
+                    </p>
+                    {nextTraining.type === "Match game" &&
+                      nextTraining.homeScore != null &&
+                      nextTraining.awayScore != null && (
+                        <p className="session-focus">
+                          Score: {nextTraining.homeScore} :{" "}
+                          {nextTraining.awayScore}
+                        </p>
+                      )}
+                  </div>
+
+                  <div className="weather-card">
+                    <div>
+                      <div className="weather-main">
+                        Weather for next session
+                      </div>
+                      <div className="stat-label">
+                        {nextTraining.weather
+                          ? `${nextTraining.weather.temp}°C, ${nextTraining.weather.condition}${
+                              nextTraining.location
+                                ? " · " + nextTraining.location
+                                : ""
+                            }`
+                          : nextTraining.location
+                          ? `Location: ${nextTraining.location}, weather not set yet`
+                          : "Weather not set yet"}
+                      </div>
+                    </div>
+                    <div className="weather-icon">
+                      {nextTraining.weather ? nextTraining.weather.icon : "🌦️"}
+                    </div>
+                  </div>
+
+                  <div className="next-list">
+                    <div className="stat-label" style={{ marginBottom: 4 }}>
+                      Next 3 events for {team.name}
+                    </div>
+                    {nextThree.map((t) => (
+                      <div key={t.id} className="next-item">
+                        <span>
+                          {formatDate(t.date)} • {t.time}
+                        </span>
+                        <span style={{ display: "flex", gap: 6 }}>
+                          <span>
+                            {t.type} · {t.focus.join(", ")}
+                          </span>
+                          <span
+                            className={
+                              "pill " +
+                              (t.attendanceConfirmed
+                                ? "pill-success"
+                                : "pill-danger")
+                            }
+                          >
+                            {t.attendanceConfirmed
+                              ? "Confirmed"
+                              : "Not confirmed"}
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p>No sessions planned yet.</p>
+              )}
+            </section>
+
+            <section className="card column">
+              <h2 className="card-title">Team events overview</h2>
+              <div className="stats-grid">
+                <div>
+                  <p className="stat-number">{totalEvents}</p>
+                  <p className="stat-label">
+                    confirmed events for {team.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="stat-number">{totalHours}</p>
+                  <p className="stat-label">total scheduled time</p>
+                </div>
+                <div>
+                  <p className="stat-number">{trainingEvents}</p>
+                  <p className="stat-label">trainings + teambuildings</p>
+                </div>
+                <div>
+                  <p className="stat-number">{matchEvents}</p>
+                  <p className="stat-label">match games & friendlies</p>
+                </div>
+                <div>
+                  <p className="stat-number">{tournamentEvents}</p>
+                  <p className="stat-label">tournaments</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="card column">
+              <h2 className="card-title">Quick actions</h2>
+              <button
+                className="primary-btn"
+                onClick={() => onQuickAction("addPlayer")}
+              >
+                + Add player
+              </button>
+              <button
+                className="primary-btn"
+                onClick={() => onQuickAction("addSession")}
+              >
+                + Add team session
+              </button>
+              <button
+                className="primary-btn"
+                onClick={() => onQuickAction("addCoach")}
+              >
+                + Add coach / assistant
+              </button>
+            </section>
+
+            <section className="card column">
+              <h2 className="card-title">Pending confirmations</h2>
+              {pendingConfirmations.length === 0 ? (
+                <p style={{ fontSize: 13, color: "var(--muted)" }}>
+                  All sessions are confirmed.
+                </p>
+              ) : (
+                <ul
+                  style={{
+                    listStyle: "none",
+                    paddingLeft: 0,
+                    fontSize: 13,
+                    margin: 0,
+                  }}
+                >
+                  {pendingConfirmations.map((t) => (
+                    <li key={t.id} style={{ marginBottom: 4 }}>
+                      {formatDate(t.date)} {t.time} – {t.type} (
+                      {t.focus.join(", ")} )
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="card column">
+              <h2 className="card-title">
+                Attendance – top 5 & lowest 5 ({team.name})
+              </h2>
+              {top5.length === 0 && bottom5.length === 0 ? (
+                <p style={{ fontSize: 13, color: "var(--muted)" }}>
+                  No confirmed attendance data yet.
+                </p>
+              ) : (
+                <div style={{ display: "flex", gap: 16 }}>
+                  <div style={{ flex: 1 }}>
+                    <p className="stat-label">Top 5 attendance</p>
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        paddingLeft: 0,
+                        fontSize: 13,
+                        margin: 0,
+                      }}
+                    >
+                      {top5.map((s) => (
+                        <li key={s.player.id} className="attendance-top">
+                          {s.player.name} – {s.attended} sessions present
+                        </li>
+                      ))}
+                      {top5.length === 0 && (
+                        <li style={{ color: "var(--muted)" }}>No data.</li>
+                      )}
+                    </ul>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p className="stat-label">Lowest 5 attendance</p>
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        paddingLeft: 0,
+                        fontSize: 13,
+                        margin: 0,
+                      }}
+                    >
+                      {bottom5.map((s) => (
+                        <li key={s.player.id} className="attendance-bottom">
+                          {s.player.name} – {s.attended} sessions present
+                        </li>
+                      ))}
+                      {bottom5.length === 0 && (
+                        <li style={{ color: "var(--muted)" }}>No data.</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="card column">
+              <h2 className="card-title">GPS check – last confirmed session</h2>
+              {lastConfirmed ? (
+                <>
+                  <p className="stat-label">
+                    Session: {formatDate(lastConfirmed.date)} {lastConfirmed.time} ·{" "}
+                    {lastConfirmed.type}
+                  </p>
+                  {gpsMissing.length === 0 ? (
+                    <p style={{ fontSize: 13, color: "var(--muted)" }}>
+                      All players with GPS devices uploaded data for this session.
+                    </p>
+                  ) : (
+                    <ul
+                      style={{
+                        listStyle: "none",
+                        paddingLeft: 0,
+                        fontSize: 13,
+                        margin: 0,
+                      }}
+                    >
+                      {gpsMissing.map((p) => (
+                        <li key={p.id} style={{ color: "var(--muted)" }}>
+                          {p.name} (GPS ID {p.gpsId}) – missing GPS data
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              ) : (
+                <p style={{ fontSize: 13, color: "var(--muted)" }}>
+                  No confirmed sessions yet.
+                </p>
+              )}
+            </section>
+
+            <section className="card players-card">
+              <div className="players-header">
+                <h2 className="card-title">Squad – {team.name}</h2>
+              </div>
+              <table className="players-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Positions</th>
+                    <th>Sessions present</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamPlayers.map((p) => {
+                    const sessionsForPlayer = confirmedTrainings.filter((t) =>
+                      isPlayerPresent(t, p.id)
+                    ).length;
+                    const nameClass =
+                      "player-name" + (p.injured ? " player-injured" : "");
+                    const posStr = [p.position1, p.position2, p.position3]
+                      .filter(Boolean)
+                      .join(", ");
+                    return (
+                      <tr key={p.id}>
+                        <td>{p.number || "-"}</td>
+                        <td className={nameClass}>{p.name}</td>
+                        <td>{p.category}</td>
+                        <td>{posStr || "-"}</td>
+                        <td>{sessionsForPlayer}</td>
+                      </tr>
+                    );
+                  })}
+                  {teamPlayers.length === 0 && (
+                    <tr>
+                      <td colSpan="5" style={{ color: "var(--muted)" }}>
+                        No players in this team yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+          </div>
+        );
+      }
+
+      // ---- TEAMS PAGE ----
+      function TeamsPage({
+        teams,
+        staff,
+        players,
+        trainings,
+        onAddTeam,
+        onUpdateTeam,
+        onDeleteTeam,
+        onAddStaff,
+        onDeleteStaff,
+        uiFlags,
+      }) {
+        const [teamForm, setTeamForm] = useState({
+          name: "",
+          category: TEAM_CATEGORY_DEFAULT,
+        });
+        const [staffForm, setStaffForm] = useState({
+          name: "",
+          role: "Coach",
+          phone: "",
+          email: "",
+        });
+
+        const handleTeamChange = (e) => {
+          const { name, value } = e.target;
+          setTeamForm((f) => ({ ...f, [name]: value }));
+        };
+
+        const handleTeamSubmit = (e) => {
+          e.preventDefault();
+          if (!teamForm.name) return;
+          onAddTeam({
+            name: teamForm.name,
+            category: teamForm.category,
+          });
+          setTeamForm({ name: "", category: TEAM_CATEGORY_DEFAULT });
+        };
+
+        const handleStaffChange = (e) => {
+          const { name, value } = e.target;
+          setStaffForm((f) => ({ ...f, [name]: value }));
+        };
+
+        const handleStaffSubmit = (e) => {
+          e.preventDefault();
+          if (!staffForm.name) return;
+          onAddStaff(staffForm);
+          setStaffForm({
+            name: "",
+            role: "Coach",
+            phone: "",
+            email: "",
+          });
+        };
+
+        const handleTeamStaffChange = (team, field, value) => {
+          onUpdateTeam({ ...team, [field]: value ? Number(value) : null });
+        };
+
+        const unconfirmedCountForTeam = (teamId) =>
+          trainings.filter(
+            (t) => t.teamId === teamId && !t.attendanceConfirmed
+          ).length;
+
+        return (
+          <div>
+            <h2>Teams</h2>
+            <p>
+              Create and manage teams. Assign a <strong>coach</strong> and{" "}
+              <strong>assistant coach</strong> per team. Players are global and
+              can belong to multiple teams. For each team you also see{" "}
+              <strong>unconfirmed sessions</strong>.
+            </p>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">Add team</h3>
+              <form className="form" onSubmit={handleTeamSubmit}>
+                <div className="form-group">
+                  <label>Team name</label>
+                  <input
+                    name="name"
+                    value={teamForm.name}
+                    onChange={handleTeamChange}
+                    placeholder="Senec FA U13"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Category</label>
+                  <input
+                    name="category"
+                    value={teamForm.category}
+                    onChange={handleTeamChange}
+                    placeholder="U13"
+                  />
+                </div>
+                <div className="form-actions">
+                  <button className="btn-small" type="submit">
+                    + Add team
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">Team staff (coaches database)</h3>
+              <form className="form" onSubmit={handleStaffSubmit}>
+                <div className="form-group">
+                  <label>Name</label>
+                  <input
+                    name="name"
+                    value={staffForm.name}
+                    onChange={handleStaffChange}
+                    placeholder="Coach name"
+                    required
+                    autoFocus={uiFlags && uiFlags.openStaffForm}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role</label>
+                  <select
+                    name="role"
+                    value={staffForm.role}
+                    onChange={handleStaffChange}
+                  >
+                    <option value="Coach">Coach</option>
+                    <option value="Assistant Coach">Assistant Coach</option>
+                    <option value="Trainer">Trainer</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    name="phone"
+                    value={staffForm.phone}
+                    onChange={handleStaffChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    name="email"
+                    value={staffForm.email}
+                    onChange={handleStaffChange}
+                  />
+                </div>
+                <div className="form-actions">
+                  <button className="btn-small" type="submit">
+                    + Add staff
+                  </button>
+                </div>
+              </form>
+
+              <table className="players-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staff.map((s) => (
+                    <tr key={s.id}>
+                      <td className="player-name">{s.name}</td>
+                      <td>{s.role}</td>
+                      <td>{s.phone}</td>
+                      <td>{s.email}</td>
+                      <td>
+                        <button
+                          className="btn-danger"
+                          type="button"
+                          onClick={() => onDeleteStaff(s.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {staff.length === 0 && (
+                    <tr>
+                      <td colSpan="5" style={{ color: "var(--muted)" }}>
+                        No staff members yet. Add first coach above.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="card">
+              <h3 className="card-title">Teams overview</h3>
+              <table className="players-table">
+                <thead>
+                  <tr>
+                    <th>Team</th>
+                    <th>Category</th>
+                    <th>Coach</th>
+                    <th>Assistant coach</th>
+                    <th>Unconfirmed sessions</th>
+                    <th>Players</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teams.map((t) => {
+                    const teamPlayers = players.filter(
+                      (p) => p.teamIds && p.teamIds.includes(t.id)
+                    );
+                    const coach = staff.find((s) => s.id === t.coachId);
+                    const assistant = staff.find(
+                      (s) => s.id === t.assistantCoachId
+                    );
+                    const unconfirmed = unconfirmedCountForTeam(t.id);
+                    return (
+                      <tr key={t.id}>
+                        <td className="player-name">{t.name}</td>
+                        <td>{t.category}</td>
+                        <td>
+                          <select
+                            value={t.coachId || ""}
+                            onChange={(e) =>
+                              handleTeamStaffChange(
+                                t,
+                                "coachId",
+                                e.target.value
+                              )
+                            }
+                          >
+                            <option value="">(none)</option>
+                            {staff.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <select
+                            value={t.assistantCoachId || ""}
+                            onChange={(e) =>
+                              handleTeamStaffChange(
+                                t,
+                                "assistantCoachId",
+                                e.target.value
+                              )
+                            }
+                          >
+                            <option value="">(none)</option>
+                            {staff.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>{unconfirmed}</td>
+                        <td>{teamPlayers.length}</td>
+                        <td>
+                          <button
+                            className="btn-danger"
+                            type="button"
+                            onClick={() => onDeleteTeam(t.id)}
+                          >
+                            Delete team
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {teams.length === 0 && (
+                    <tr>
+                      <td colSpan="7" style={{ color: "var(--muted)" }}>
+                        No teams created yet. Use "Add team" above.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+          </div>
+        );
+      }
+
+      // Small helper for "no team yet" views
+      function NoTeamMessage() {
+        return (
+          <div className="card">
+            <h2 className="card-title">No team selected</h2>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>
+              There is no active team yet. Go to the <strong>Teams</strong> tab
+              and create your first team to start using Dashboard, Training,
+              Calendar and Statistics.
+            </p>
+          </div>
+        );
+      }
+      // ---- PLAYERS PAGE ----
+      function PlayersPage({
+        teams,
+        players,
+        trainings,
+        onAddPlayer,
+        onUpdatePlayer,
+        onDeletePlayer,
+        selectedPlayer,
+        onSelectPlayer,
+        uiFlags,
+      }) {
+        const [filterTeamId, setFilterTeamId] = useState("");
+        const [form, setForm] = useState({
+          name: "",
+          birthDate: "",
+          age: "",
+          number: "",
+          position1: "",
+          position2: "",
+          position3: "",
+          parentContact: "",
+          parentEmail: "",
+          category: TEAM_CATEGORY_DEFAULT,
+          gpsId: "",
+          teamIds: [],
+        });
+
+        const handleChange = (e) => {
+          const { name, value } = e.target;
+          setForm((f) => ({ ...f, [name]: value }));
+        };
+
+        const handleTeamIdsChange = (e) => {
+          const opts = Array.from(e.target.selectedOptions);
+          const ids = opts.map((o) => Number(o.value));
+          setForm((f) => ({ ...f, teamIds: ids }));
+        };
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (!form.name) return;
+          const ageNum = form.age ? Number(form.age) : null;
+          onAddPlayer({
+            ...form,
+            age: ageNum,
+          });
+          setForm({
+            name: "",
+            birthDate: "",
+            age: "",
+            number: "",
+            position1: "",
+            position2: "",
+            position3: "",
+            parentContact: "",
+            parentEmail: "",
+            category: TEAM_CATEGORY_DEFAULT,
+            gpsId: "",
+            teamIds: [],
+          });
+        };
+
+        const filteredPlayers = players.filter((p) => {
+          if (!filterTeamId) return true;
+          const teamIdNum = Number(filterTeamId);
+          return p.teamIds && p.teamIds.includes(teamIdNum);
+        });
+
+        const handleRowClick = (id) => {
+          onSelectPlayer(id);
+        };
+
+        return (
+          <div>
+            <h2>Players</h2>
+            <p>
+              Manage team players, update profiles, GPS IDs, birth dates,
+              positions, and see long–term statistics per player.
+            </p>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">Add / register player</h3>
+              <form className="form" onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label>Full name</label>
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Player name"
+                    required
+                    autoFocus={uiFlags && uiFlags.openPlayerForm}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Birth date</label>
+                  <input
+                    type="date"
+                    name="birthDate"
+                    value={form.birthDate}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Age</label>
+                  <input
+                    name="age"
+                    type="number"
+                    min="5"
+                    max="25"
+                    value={form.age}
+                    onChange={handleChange}
+                    placeholder="13"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Shirt number</label>
+                  <input
+                    name="number"
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={form.number}
+                    onChange={handleChange}
+                    placeholder="10"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Position 1</label>
+                  <input
+                    name="position1"
+                    value={form.position1}
+                    onChange={handleChange}
+                    placeholder="ST, CB, CM..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Position 2</label>
+                  <input
+                    name="position2"
+                    value={form.position2}
+                    onChange={handleChange}
+                    placeholder="optional"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Position 3</label>
+                  <input
+                    name="position3"
+                    value={form.position3}
+                    onChange={handleChange}
+                    placeholder="optional"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Category</label>
+                  <input
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    placeholder="U13"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Parent phone</label>
+                  <input
+                    name="parentContact"
+                    value={form.parentContact}
+                    onChange={handleChange}
+                    placeholder="+421..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Parent e-mail</label>
+                  <input
+                    name="parentEmail"
+                    value={form.parentEmail}
+                    onChange={handleChange}
+                    placeholder="parent@email.com"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>GPS device ID (StatsSport)</label>
+                  <input
+                    name="gpsId"
+                    value={form.gpsId}
+                    onChange={handleChange}
+                    placeholder="e.g. 1234"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Assign to teams</label>
+                  <select
+                    multiple
+                    value={form.teamIds.map(String)}
+                    onChange={handleTeamIdsChange}
+                  >
+                    {teams.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="stat-label">
+                    Hold Ctrl / Cmd to select multiple teams
+                  </span>
+                </div>
+                <div className="form-actions">
+                  <button className="btn-small" type="submit">
+                    + Add player
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <div className="players-header">
+                <h3 className="card-title">Players list</h3>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span className="stat-label">Filter by team:</span>
+                  <select
+                    value={filterTeamId}
+                    onChange={(e) => setFilterTeamId(e.target.value)}
+                    style={{
+                      borderRadius: "999px",
+                      border: "1px solid var(--border-strong)",
+                      padding: "4px 10px",
+                      fontSize: "13px",
+                    }}
+                  >
+                    <option value="">All</option>
+                    {teams.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <table className="players-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Positions</th>
+                    <th>Birth date</th>
+                    <th>Teams</th>
+                    <th>GPS ID</th>
+                    <th>Injury</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPlayers.map((p) => {
+                    const teamsForPlayer = teams.filter(
+                      (t) => p.teamIds && p.teamIds.includes(t.id)
+                    );
+                    const className =
+                      "player-name" + (p.injured ? " player-injured" : "");
+                    const posStr = [p.position1, p.position2, p.position3]
+                      .filter(Boolean)
+                      .join(", ");
+                    return (
+                      <tr
+                        key={p.id}
+                        onClick={() => handleRowClick(p.id)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <td>{p.number || "-"}</td>
+                        <td className={className}>{p.name}</td>
+                        <td>{p.category}</td>
+                        <td>{posStr || "-"}</td>
+                        <td>{p.birthDate || "-"}</td>
+                        <td>
+                          {teamsForPlayer.map((t) => t.name).join(", ") || "-"}
+                        </td>
+                        <td>{p.gpsId || "-"}</td>
+                        <td>{p.injured ? "Injured" : "-"}</td>
+                      </tr>
+                    );
+                  })}
+                  {filteredPlayers.length === 0 && (
+                    <tr>
+                      <td colSpan="8" style={{ color: "var(--muted)" }}>
+                        No players added yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            {selectedPlayer && (
+              <section className="card">
+                <PlayerProfile
+                  player={selectedPlayer}
+                  trainings={trainings}
+                  teams={teams}
+                  onUpdatePlayer={onUpdatePlayer}
+                  onDeletePlayer={onDeletePlayer}
+                />
+              </section>
+            )}
+          </div>
+        );
+      }
+
+      // ---- PLAYER PROFILE ----
+      function PlayerProfile({ player, trainings, teams, onUpdatePlayer, onDeletePlayer }) {
+        const [local, setLocal] = useState(player);
+        const [newTrial, setNewTrial] = useState({
+          club: "",
+          from: "",
+          to: "",
+          notes: "",
+        });
+
+        useEffect(() => {
+          setLocal(player);
+        }, [player]);
+
+        const handleChange = (e) => {
+          const { name, value, type, checked } = e.target;
+          if (type === "checkbox") {
+            setLocal((p) => ({ ...p, [name]: checked }));
+          } else {
+            setLocal((p) => ({ ...p, [name]: value }));
+          }
+        };
+
+        const handleTeamsChange = (e) => {
+          const opts = Array.from(e.target.selectedOptions);
+          const ids = opts.map((o) => Number(o.value));
+          setLocal((p) => ({ ...p, teamIds: ids }));
+        };
+
+        const handlePhotoChange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const dataUrl = ev.target.result;
+            setLocal((p) => ({ ...p, photo: dataUrl }));
+          };
+          reader.readAsDataURL(file);
+        };
+
+        const handleTrialChange = (e) => {
+          const { name, value } = e.target;
+          setNewTrial((t) => ({ ...t, [name]: value }));
+        };
+
+        const addTrial = () => {
+          if (!newTrial.club) {
+            alert("Set club name for trial.");
+            return;
+          }
+          setLocal((p) => ({
+            ...p,
+            trials: [...(p.trials || []), { ...newTrial, id: Date.now() }],
+          }));
+          setNewTrial({
+            club: "",
+            from: "",
+            to: "",
+            notes: "",
+          });
+        };
+
+        const removeTrial = (id) => {
+          setLocal((p) => ({
+            ...p,
+            trials: (p.trials || []).filter((tr) => tr.id !== id),
+          }));
+        };
+
+        const handleSave = () => {
+          const ageNum = local.age ? Number(local.age) : null;
+          onUpdatePlayer({ ...local, age: ageNum });
+          alert("Player profile saved.");
+        };
+
+        const handleDelete = () => {
+          if (
+            !window.confirm(
+              "Remove this player from the database? Stats will remain in exported PDFs only."
+            )
+          )
+            return;
+          onDeletePlayer(local.id);
+        };
+
+        const playerSessions = trainings.filter((t) =>
+          t.playerIds.includes(player.id)
+        );
+        const confirmed = playerSessions.filter((t) => t.attendanceConfirmed);
+
+        const attendedSessions = confirmed.filter((t) =>
+          isPlayerPresent(t, player.id)
+        );
+
+        const trainingCount = attendedSessions.filter(
+          (t) => t.type === "Training" || t.type === "Teambuilding"
+        ).length;
+        const matchCount = attendedSessions.filter((t) =>
+          ["Match game", "Friendly game"].includes(t.type)
+        ).length;
+        const tournamentCount = attendedSessions.filter(
+          (t) => t.type === "Tournament"
+        ).length;
+
+        const totalMinutes = attendedSessions.reduce((sum, t) => {
+          const mins =
+            (t.playerMinutes && t.playerMinutes[player.id]) ||
+            Number(t.duration) ||
+            0;
+          return sum + mins;
+        }, 0);
+        const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+        // GPS records
+        const gpsRecords = [];
+        attendedSessions.forEach((t) => {
+          if (t.gps && t.gps[player.id]) {
+            gpsRecords.push({
+              date: t.date,
+              type: t.type,
+              focus: t.focus,
+              ...t.gps[player.id],
+            });
+          }
+        });
+
+        const gpsSummary = (() => {
+          if (gpsRecords.length === 0) return null;
+          let totalDist = 0;
+          let totalSprints = 0;
+          let maxSpeed = 0;
+          let totalHsr = 0;
+          let hsrCount = 0;
+          gpsRecords.forEach((r) => {
+            totalDist += r.distance || 0;
+            totalSprints += r.sprints || 0;
+            if (r.maxSpeed && r.maxSpeed > maxSpeed) maxSpeed = r.maxSpeed;
+            if (typeof r.hsr === "number") {
+              totalHsr += r.hsr;
+              hsrCount += 1;
+            }
+          });
+          const avgDist =
+            Math.round((totalDist / gpsRecords.length) * 10) / 10;
+          const avgSprints =
+            Math.round((totalSprints / gpsRecords.length) * 10) / 10;
+          const avgHsr =
+            hsrCount > 0
+              ? Math.round((totalHsr / hsrCount) * 10) / 10
+              : null;
+          return {
+            sessions: gpsRecords.length,
+            totalDist: Math.round(totalDist * 10) / 10,
+            totalSprints,
+            avgDist,
+            avgSprints,
+            maxSpeed: Math.round(maxSpeed * 10) / 10,
+            avgHsr,
+          };
+        })();
+
+        // Last 7 performance ratings (from matches)
+        const matchSessions = confirmed
+          .filter((t) =>
+            ["Match game", "Friendly game"].includes(t.type)
+          )
+          .sort(compareDateTime);
+        const lastSevenWithRating = matchSessions
+          .map((m) => ({
+            date: m.date,
+            type: m.type,
+            rating:
+              m.playerRatings && m.playerRatings[player.id] != null
+                ? m.playerRatings[player.id]
+                : null,
+          }))
+          .filter((r) => r.rating != null)
+          .slice(-7);
+
+        const formAverage =
+          lastSevenWithRating.length > 0
+            ? Math.round(
+                (lastSevenWithRating.reduce((s, r) => s + r.rating, 0) /
+                  lastSevenWithRating.length) *
+                  10
+              ) / 10
+            : null;
+
+        const formClass = formBadgeClass(formAverage);
+
+        const generateMonthlyReport = () => {
+          const now = new Date();
+          const ym = `${now.getFullYear()}-${String(
+            now.getMonth() + 1
+          ).padStart(2, "0")}`;
+          const monthSessions = confirmed.filter(
+            (s) => getYearMonth(s.date) === ym && isPlayerPresent(s, player.id)
+          );
+          if (monthSessions.length === 0) {
+            alert("No confirmed sessions for this month to report.");
+            return;
+          }
+
+          const lines = [];
+          lines.push(`Monthly training report for ${player.name}`);
+          lines.push("");
+          monthSessions.forEach((s) => {
+            const mins =
+              (s.playerMinutes && s.playerMinutes[player.id]) ||
+              Number(s.duration) ||
+              0;
+            lines.push(
+              `- ${formatDate(s.date)} ${s.time} – ${s.type} (${s.focus.join(
+                ", "
+              )}), minutes on field: ${mins}`
+            );
+            if (s.gps && s.gps[player.id]) {
+              const g = s.gps[player.id];
+              lines.push(
+                `  GPS: distance ${g.distance} km, sprints ${g.sprints}, max speed ${g.maxSpeed} km/h${
+                  typeof g.hsr === "number" ? `, HSR ${g.hsr} km` : ""
+                }`
+              );
+            }
+          });
+          if (gpsSummary) {
+            lines.push("");
+            lines.push(
+              `GPS monthly summary – avg distance ${gpsSummary.avgDist} km, avg sprints ${gpsSummary.avgSprints}${
+                gpsSummary.avgHsr != null
+                  ? `, avg HSR ${gpsSummary.avgHsr} km`
+                  : ""
+              }, top speed ${gpsSummary.maxSpeed} km/h`
+            );
+          }
+
+          const message = lines.join("\n");
+          console.log(message);
+          alert(
+            "Monthly report generated in console. You can copy it from DevTools console and send it to parents by e-mail or attach to PDF export."
+          );
+        };
+
+        const teamsForPlayer = teams.filter(
+          (t) => local.teamIds && local.teamIds.includes(t.id)
+        );
+
+        return (
+          <div className="profile-layout">
+            <div className="profile-left">
+              {local.photo ? (
+                <img
+                  src={local.photo}
+                  alt={local.name}
+                  className="avatar-large"
+                />
+              ) : (
+                <div
+                  className="avatar-large"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 32,
+                    color: "var(--muted)",
+                  }}
+                >
+                  {local.name.slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="form-group">
+                <label>Upload player photo</label>
+                <input type="file" accept="image/*" onChange={handlePhotoChange} />
+              </div>
+              <p className="profile-name">
+                {local.name}{" "}
+                {local.number && <span>· #{local.number}</span>}{" "}
+                {local.injured && (
+                  <span className="pill pill-danger">INJURED</span>
+                )}
+              </p>
+              <p className="profile-meta">
+                {[local.position1, local.position2, local.position3]
+                  .filter(Boolean)
+                  .join(", ") || "Position N/A"}{" "}
+                · Category {local.category}
+                <br />
+                {local.birthDate && (
+                  <>
+                    Birth date: {local.birthDate}
+                    <br />
+                  </>
+                )}
+                Teams:{" "}
+                {teamsForPlayer.map((t) => t.name).join(", ") || "No team"}
+              </p>
+
+              <h4 className="profile-section-title">
+                Category & team assignment
+              </h4>
+              <div className="form-group">
+                <label>Category</label>
+                <input
+                  name="category"
+                  value={local.category || ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Assigned teams</label>
+                <select
+                  multiple
+                  value={(local.teamIds || []).map(String)}
+                  onChange={handleTeamsChange}
+                >
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="stat-label">
+                  You can move player to another category/team here. Stats
+                  remain with the player.
+                </span>
+              </div>
+
+              <h4 className="profile-section-title">Contact & status</h4>
+              <div className="form-group">
+                <label>Parent phone</label>
+                <input
+                  name="parentContact"
+                  value={local.parentContact || ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Parent e-mail</label>
+                <input
+                  name="parentEmail"
+                  value={local.parentEmail || ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>GPS device ID</label>
+                <input
+                  name="gpsId"
+                  value={local.gpsId || ""}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Shirt number</label>
+                <input
+                  type="number"
+                  name="number"
+                  value={local.number || ""}
+                  onChange={handleChange}
+                  min="1"
+                  max="99"
+                />
+              </div>
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    name="injured"
+                    checked={!!local.injured}
+                    onChange={handleChange}
+                    style={{ marginRight: 6 }}
+                  />
+                  Injured
+                </label>
+              </div>
+              {local.injured && (
+                <>
+                  <div className="form-group">
+                    <label>Estimated return date</label>
+                    <input
+                      type="date"
+                      name="injuryUntil"
+                      value={local.injuryUntil || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Injury note</label>
+                    <textarea
+                      name="injuryNote"
+                      value={local.injuryNote || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </>
+              )}
+
+              <button
+                className="btn-small"
+                type="button"
+                onClick={handleSave}
+                style={{ marginTop: 8 }}
+              >
+                Save player profile
+              </button>
+
+              <button
+                className="btn-small"
+                type="button"
+                onClick={generateMonthlyReport}
+                style={{ marginTop: 8 }}
+              >
+                Generate monthly training report
+              </button>
+
+              <button
+                className="btn-danger"
+                type="button"
+                onClick={handleDelete}
+                style={{ marginTop: 8 }}
+              >
+                Delete player
+              </button>
+            </div>
+
+            <div className="profile-right">
+              <h4 className="profile-section-title">Player bio</h4>
+              <div className="form-group">
+                <label>Bio / notes</label>
+                <textarea
+                  name="bio"
+                  value={local.bio || ""}
+                  onChange={handleChange}
+                  placeholder="Short description, strengths, notes..."
+                  style={{ minHeight: 80 }}
+                />
+              </div>
+
+              <h4 className="profile-section-title">Training summary</h4>
+              <div className="stats-grid" style={{ marginBottom: 12 }}>
+                <div>
+                  <p className="stat-number">{attendedSessions.length}</p>
+                  <p className="stat-label">confirmed sessions present</p>
+                </div>
+                <div>
+                  <p className="stat-number">{trainingCount}</p>
+                  <p className="stat-label">trainings + teambuildings</p>
+                </div>
+                <div>
+                  <p className="stat-number">{matchCount}</p>
+                  <p className="stat-label">match games & friendlies</p>
+                </div>
+                <div>
+                  <p className="stat-number">{tournamentCount}</p>
+                  <p className="stat-label">tournaments</p>
+                </div>
+                <div>
+                  <p className="stat-number">{totalHours}</p>
+                  <p className="stat-label">hours on the pitch</p>
+                </div>
+                <div>
+                  <p className={"stat-number " + (formClass || "")}>
+                    {formAverage != null ? formAverage : "-"}
+                  </p>
+                  <p className="stat-label">form (last 7 match ratings)</p>
+                </div>
+              </div>
+
+              <h4 className="profile-section-title">GPS analysis</h4>
+              {gpsSummary ? (
+                <>
+                  <p className="profile-meta">
+                    GPS sessions: {gpsSummary.sessions} <br />
+                    Total distance: {gpsSummary.totalDist} km · Total sprints:{" "}
+                    {gpsSummary.totalSprints}
+                    <br />
+                    Avg distance: {gpsSummary.avgDist} km · Avg sprints:{" "}
+                    {gpsSummary.avgSprints}
+                    <br />
+                    Max recorded speed: {gpsSummary.maxSpeed} km/h
+                    <br />
+                    {gpsSummary.avgHsr != null &&
+                      `Avg HSR: ${gpsSummary.avgHsr} km`}
+                  </p>
+                  <table className="performance-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Focus</th>
+                        <th>Dist (km)</th>
+                        <th>Sprints</th>
+                        <th>Max speed</th>
+                        <th>HSR</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gpsRecords.map((r, idx) => (
+                        <tr key={idx}>
+                          <td>{formatDate(r.date)}</td>
+                          <td>{r.type}</td>
+                          <td>{r.focus.join(", ")}</td>
+                          <td>{r.distance}</td>
+                          <td>{r.sprints}</td>
+                          <td>{r.maxSpeed}</td>
+                          <td>
+                            {typeof r.hsr === "number" ? r.hsr : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              ) : (
+                <p className="profile-meta">
+                  No GPS data recorded yet for this player.
+                </p>
+              )}
+
+              <h4 className="profile-section-title">Trials (other clubs)</h4>
+              <p className="profile-meta">
+                Record when the player goes for a trial at another club.
+              </p>
+              <div className="form" style={{ marginBottom: 8 }}>
+                <div className="form-group">
+                  <label>Club</label>
+                  <input
+                    name="club"
+                    value={newTrial.club}
+                    onChange={handleTrialChange}
+                    placeholder="Trial club name"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>From</label>
+                  <input
+                    type="date"
+                    name="from"
+                    value={newTrial.from}
+                    onChange={handleTrialChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>To</label>
+                  <input
+                    type="date"
+                    name="to"
+                    value={newTrial.to}
+                    onChange={handleTrialChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <input
+                    name="notes"
+                    value={newTrial.notes}
+                    onChange={handleTrialChange}
+                    placeholder="Short trial description"
+                  />
+                </div>
+              </div>
+              <button
+                className="btn-small"
+                type="button"
+                onClick={addTrial}
+                style={{ marginBottom: 8 }}
+              >
+                + Add trial
+              </button>
+
+              {(local.trials || []).length > 0 ? (
+                <table className="performance-table">
+                  <thead>
+                    <tr>
+                      <th>Club</th>
+                      <th>From</th>
+                      <th>To</th>
+                      <th>Notes</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {local.trials.map((tr) => (
+                      <tr key={tr.id}>
+                        <td>{tr.club}</td>
+                        <td>{tr.from || "-"}</td>
+                        <td>{tr.to || "-"}</td>
+                        <td>{tr.notes || "-"}</td>
+                        <td>
+                          <button
+                            className="btn-danger"
+                            type="button"
+                            onClick={() => removeTrial(tr.id)}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="profile-meta">No trials recorded yet.</p>
+              )}
+
+              <h4 className="profile-section-title">
+                Long–term performance analysis
+              </h4>
+              <p className="profile-meta">
+                This section summarises long–term GPS data, attendance and match
+                form. Use it as a base for individual feedback:
+              </p>
+              <ul style={{ fontSize: 13, color: "var(--muted)" }}>
+                <li>
+                  Attendance: {attendedSessions.length} confirmed sessions
+                  present, {totalHours} hours on the field.
+                </li>
+                {gpsSummary && (
+                  <li>
+                    Running load: avg distance {gpsSummary.avgDist} km, avg{" "}
+                    {gpsSummary.avgSprints} sprints, avg HSR{" "}
+                    {gpsSummary.avgHsr != null
+                      ? `${gpsSummary.avgHsr} km`
+                      : "N/A"}
+                    .
+                  </li>
+                )}
+                {formAverage != null && (
+                  <li>
+                    Form: last 7 match ratings average {formAverage}/10.
+                  </li>
+                )}
+                {local.injured && (
+                  <li>
+                    Player currently injured. Expected return:{" "}
+                    {local.injuryUntil || "not set yet"}.
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        );
+      }
+
+      // ---- TRAINING PAGE ----
+      function TrainingPage({
+        team,
+        teams,
+        players,
+        trainings,
+        onAddTraining,
+        onAddTrainingsBulk,
+        onDeleteTraining,
+        onSelectEvent,
+        staff,
+        uiFlags,
+      }) {
+        const [form, setForm] = useState({
+          date: "",
+          time: "",
+          type: "Training",
+          duration: 90,
+          field: "Home pitch",
+          location: "",
+          focusText: "",
+          extraPlayerIds: [],
+        });
+
+        const handleChange = (e) => {
+          const { name, value } = e.target;
+          setForm((f) => ({ ...f, [name]: value }));
+        };
+
+        const handleNumberChange = (e) => {
+          const { name, value } = e.target;
+          setForm((f) => ({
+            ...f,
+            [name]: value === "" ? "" : Number(value),
+          }));
+        };
+
+        const handleExtraPlayersChange = (e) => {
+          const opts = Array.from(e.target.selectedOptions);
+          const ids = opts.map((o) => Number(o.value));
+          setForm((f) => ({ ...f, extraPlayerIds: ids }));
+        };
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (!form.date || !form.time) {
+            alert("Please set date and time.");
+            return;
+          }
+          const focus =
+            form.focusText
+              .split(",")
+              .map((p) => p.trim())
+              .filter(Boolean) || [];
+
+          // base players = team players
+          const teamPlayers = players.filter(
+            (p) => p.teamIds && p.teamIds.includes(team.id)
+          );
+          const baseIds = teamPlayers.map((p) => p.id);
+          const extraIds = form.extraPlayerIds || [];
+          const combinedIds = Array.from(new Set([...baseIds, ...extraIds]));
+
+          onAddTraining({
+            date: form.date,
+            time: form.time,
+            type: form.type,
+            duration: form.duration || 90,
+            field: form.field || "Home pitch",
+            location: form.location || "",
+            focus: focus.length ? focus : ["general"],
+            playerIds: combinedIds,
+          });
+          setForm((f) => ({
+            ...f,
+            time: "",
+            type: "Training",
+            duration: 90,
+            field: "Home pitch",
+            location: "",
+            focusText: "",
+            extraPlayerIds: [],
+          }));
+        };
+
+        const handleOpenEvent = (id) => {
+          onSelectEvent(id);
+        };
+
+        const sorted = [...trainings].sort(compareDateTime);
+
+        const otherTeamPlayers = players.filter(
+          (p) => !(p.teamIds && p.teamIds.includes(team.id))
+        );
+
+        return (
+          <div>
+            <h2>Training & events – {team.name}</h2>
+            <p>
+              Create, edit and confirm <strong>training sessions</strong>,{" "}
+              <strong>match games</strong>, <strong>friendlies</strong>,{" "}
+              <strong>tournaments</strong> and <strong>teambuildings</strong>.
+              Attendance is counted into statistics only after{" "}
+              <strong>coach / assistant confirmation</strong>. You can also{" "}
+              <strong>add players from other categories</strong> for a single
+              event.
+            </p>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">Add event / session</h3>
+              <form className="form" onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={form.date}
+                    onChange={handleChange}
+                    required
+                    autoFocus={uiFlags && uiFlags.openTrainingForm}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Time</label>
+                  <input
+                    name="time"
+                    value={form.time}
+                    onChange={handleChange}
+                    placeholder="17:00"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Type</label>
+                  <select
+                    name="type"
+                    value={form.type}
+                    onChange={handleChange}
+                  >
+                    <option value="Training">Training</option>
+                    <option value="Teambuilding">Teambuilding</option>
+                    <option value="Match game">Match game</option>
+                    <option value="Friendly game">Friendly game</option>
+                    <option value="Tournament">Tournament</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Duration (minutes)</label>
+                  <input
+                    type="number"
+                    name="duration"
+                    min="0"
+                    max="180"
+                    value={form.duration}
+                    onChange={handleNumberChange}
+                  />
+                  <span className="stat-label">
+                    Trainings are usually 90 minutes
+                  </span>
+                </div>
+                <div className="form-group">
+                  <label>Field / pitch</label>
+                  <input
+                    name="field"
+                    value={form.field}
+                    onChange={handleChange}
+                    placeholder="Home pitch"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Location (city / venue)</label>
+                  <input
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    placeholder="Training center A"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Focus (comma separated)</label>
+                  <input
+                    name="focusText"
+                    value={form.focusText}
+                    onChange={handleChange}
+                    placeholder="pressing, finishing..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Additional players from other teams</label>
+                  <select
+                    multiple
+                    value={form.extraPlayerIds.map(String)}
+                    onChange={handleExtraPlayersChange}
+                  >
+                    {otherTeamPlayers.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.category})
+                      </option>
+                    ))}
+                  </select>
+                  <span className="stat-label">
+                    Only players registered in the club (other categories).
+                  </span>
+                </div>
+                <div className="form-actions">
+                  <button className="btn-small" type="submit">
+                    + Add event
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <section className="card">
+              <h3 className="card-title">Team events list</h3>
+              <table className="players-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Field</th>
+                    <th>Location</th>
+                    <th>Focus</th>
+                    <th>Confirmed</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map((t) => (
+                    <tr key={t.id}>
+                      <td>{formatDate(t.date)}</td>
+                      <td>{t.time}</td>
+                      <td>{t.type}</td>
+                      <td>{t.field}</td>
+                      <td>{t.location || "-"}</td>
+                      <td>{t.focus.join(", ")}</td>
+                      <td>
+                        <span
+                          className={
+                            "pill " +
+                            (t.attendanceConfirmed
+                              ? "pill-success"
+                              : "pill-danger")
+                          }
+                        >
+                          {t.attendanceConfirmed ? "Confirmed" : "Not confirmed"}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn-small"
+                          type="button"
+                          onClick={() => handleOpenEvent(t.id)}
+                          style={{ marginRight: 6 }}
+                        >
+                          Open
+                        </button>
+                        <button
+                          className="btn-danger"
+                          type="button"
+                          onClick={() => onDeleteTraining(t.id)}
+                        >
+                          Cancel
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {sorted.length === 0 && (
+                    <tr>
+                      <td colSpan="8" style={{ color: "var(--muted)" }}>
+                        No events created yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+          </div>
+        );
+      }
+
+      // ---- CALENDAR PAGE ----
+      function CalendarPage({
+        team,
+        trainings,
+        calendarNotes,
+        onUpdateCalendarNotes,
+        onDeleteTraining,
+        onSelectEvent,
+        players = [], // optional, for future birthday integration
+      }) {
+        const today = new Date();
+        const firstDate =
+          trainings.length > 0 ? new Date(trainings[0].date) : today;
+
+        const [currentYear, setCurrentYear] = useState(firstDate.getFullYear());
+        const [currentMonth, setCurrentMonth] = useState(firstDate.getMonth()); // 0-11
+
+        const ymStr = `${currentYear}-${String(currentMonth + 1).padStart(
+          2,
+          "0"
+        )}`;
+
+        const monthTrainings = trainings.filter(
+          (t) => getYearMonth(t.date) === ymStr
+        );
+
+        const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+        const firstOfMonth = new Date(currentYear, currentMonth, 1);
+        const startDay = (firstOfMonth.getDay() + 6) % 7; // Monday-based index
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        const prevMonthDays = startDay;
+        const totalCells = 42; // 6 weeks x 7 days
+
+        const cells = [];
+        for (let i = 0; i < totalCells; i++) {
+          const dayNum = i - prevMonthDays + 1;
+          let dateObj;
+          let inCurrent = true;
+          if (dayNum < 1) {
+            const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const prevYear =
+              currentMonth === 0 ? currentYear - 1 : currentYear;
+            const prevDays = new Date(prevYear, prevMonth + 1, 0).getDate();
+            dateObj = new Date(prevYear, prevMonth, prevDays + dayNum);
+            inCurrent = false;
+          } else if (dayNum > daysInMonth) {
+            const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+            const nextYear =
+              currentMonth === 11 ? currentYear + 1 : currentYear;
+            dateObj = new Date(nextYear, nextMonth, dayNum - daysInMonth);
+            inCurrent = false;
+          } else {
+            dateObj = new Date(currentYear, currentMonth, dayNum);
+            inCurrent = true;
+          }
+          const dateStr = dateObj.toISOString().slice(0, 10);
+          const eventsForDay = trainings.filter((t) => t.date === dateStr);
+          // birthdays: placeholder (needs players array; if empty, no birthdays)
+          const birthdays =
+            players && players.length
+              ? players.filter((p) => {
+                  if (!p.birthDate) return false;
+                  const [, m, d] = p.birthDate.split("-");
+                  return (
+                    Number(m) === dateObj.getMonth() + 1 &&
+                    Number(d) === dateObj.getDate()
+                  );
+                })
+              : [];
+          cells.push({ dateObj, dateStr, inCurrent, eventsForDay, birthdays });
+        }
+
+        const gotoMonth = (delta) => {
+          let m = currentMonth + delta;
+          let y = currentYear;
+          if (m < 0) {
+            m = 11;
+            y -= 1;
+          } else if (m > 11) {
+            m = 0;
+            y += 1;
+          }
+          setCurrentMonth(m);
+          setCurrentYear(y);
+        };
+
+        const eventClass = (ev) => {
+          const type = ev.type;
+          if (type === "Training") return "calendar-event-training";
+          if (type === "Teambuilding") return "calendar-event-teambuilding";
+          if (type === "Tournament") return "calendar-event-tournament";
+          if (type === "Match game" || type === "Friendly game")
+            return "calendar-event-match";
+          return "calendar-event-training";
+        };
+
+        const handleDayNote = (dateStr) => {
+          const current = calendarNotes[dateStr] || "";
+          const pretty = formatDate(dateStr);
+          const note = window.prompt(
+            `Coach note for ${pretty} (leave empty to clear):`,
+            current
+          );
+          if (note === null) return;
+          const updated = { ...calendarNotes };
+          if (note.trim() === "") {
+            delete updated[dateStr];
+          } else {
+            updated[dateStr] = note.trim();
+          }
+          onUpdateCalendarNotes(updated);
+        };
+
+        return (
+          <div>
+            <h2>Calendar – {team.name}</h2>
+            <p>
+              Month view of all events. Click an event to open details, confirm
+              attendance or adjust minutes and match score. Click on a{" "}
+              <strong>day number</strong> to add a <strong>coach note</strong>.
+              Events are shown in <span style={{ color: "#22c55e" }}>
+                green
+              </span>{" "}
+              when confirmed and <span style={{ color: "#f87171" }}>red</span>{" "}
+              when not confirmed. Locations are visible inside each event.
+            </p>
+
+            <div className="calendar-month">
+              <div className="calendar-month-header">
+                <div className="calendar-month-title">
+                  {monthName(currentYear, currentMonth)}
+                </div>
+                <div className="calendar-month-nav">
+                  <button
+                    className="calendar-nav-btn"
+                    type="button"
+                    onClick={() => gotoMonth(-1)}
+                  >
+                    ◀
+                  </button>
+                  <button
+                    className="calendar-nav-btn"
+                    type="button"
+                    onClick={() => {
+                      setCurrentYear(today.getFullYear());
+                      setCurrentMonth(today.getMonth());
+                    }}
+                  >
+                    Today
+                  </button>
+                  <button
+                    className="calendar-nav-btn"
+                    type="button"
+                    onClick={() => gotoMonth(1)}
+                  >
+                    ▶
+                  </button>
+                </div>
+              </div>
+
+              <div className="calendar-month-grid">
+                {daysOfWeek.map((d) => (
+                  <div key={d} className="calendar-weekday">
+                    {d}
+                  </div>
+                ))}
+                {cells.map((cell, idx) => (
+                  <div
+                    key={idx}
+                    className={
+                      "calendar-cell " +
+                      (cell.inCurrent ? "" : "calendar-cell-outside")
+                    }
+                  >
+                    <div className="calendar-cell-header">
+                      <button
+                        type="button"
+                        className="calendar-cell-day"
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "inherit",
+                          cursor: "pointer",
+                          padding: 0,
+                        }}
+                        onClick={() => handleDayNote(cell.dateStr)}
+                      >
+                        {cell.dateObj.getDate()}
+                      </button>
+                    </div>
+                    <div className="calendar-cell-events">
+                      {cell.eventsForDay.map((ev) => (
+                        <div
+                          key={ev.id}
+                          className={
+                            "calendar-event " +
+                            eventClass(ev) +
+                            " " +
+                            (ev.attendanceConfirmed
+                              ? "calendar-event-confirmed"
+                              : "calendar-event-unconfirmed")
+                          }
+                          onClick={() => onSelectEvent(ev.id)}
+                          style={{
+                            borderColor: ev.attendanceConfirmed
+                              ? "rgba(34,197,94,0.7)"
+                              : "rgba(248,113,113,0.7)",
+                          }}
+                        >
+                          <span className="calendar-event-title">
+                            {ev.type}
+                          </span>
+                          <span className="calendar-event-sub">
+                            {ev.time} · {ev.focus.join(", ")}
+                          </span>
+                          <span className="calendar-event-sub">
+                            {ev.location || ev.field || ""}
+                          </span>
+                          <span className="calendar-event-status">
+                            {ev.attendanceConfirmed ? "Confirmed" : "Not confirmed"}
+                          </span>
+                        </div>
+                      ))}
+                      {calendarNotes[cell.dateStr] && (
+                        <div className="calendar-event calendar-event-note">
+                          <span className="calendar-event-title">
+                            Coach note
+                          </span>
+                          <span className="calendar-event-sub">
+                            {calendarNotes[cell.dateStr]}
+                          </span>
+                        </div>
+                      )}
+                      {cell.birthdays && cell.birthdays.length > 0 && (
+                        <div className="calendar-event calendar-event-note">
+                          <span className="calendar-event-title">Birthdays</span>
+                          <span className="calendar-event-sub">
+                            {cell.birthdays.map((b) => b.name).join(", ")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // ---- STATISTICS PAGE ----
+      function StatisticsPage({
+        team,
+        teams,
+        players,
+        trainings,
+        onImportGpsCsv,
+        onImportGpsFile,
+      }) {
+        const [gpsText, setGpsText] = useState("");
+        const [sortConfig, setSortConfig] = useState({
+          field: "sessionsPresent",
+          dir: "desc",
+        });
+        const [exportMonth, setExportMonth] = useState(() => {
+          const now = new Date();
+          return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+            2,
+            "0"
+          )}`;
+        });
+
+        const teamTrainings = trainings.filter((t) => t.teamId === team.id);
+        const confirmed = teamTrainings.filter((t) => t.attendanceConfirmed);
+
+        const trainingEvents = confirmed.filter(
+          (t) => t.type === "Training" || t.type === "Teambuilding"
+        );
+        const matchEvents = confirmed.filter((t) =>
+          ["Match game", "Friendly game"].includes(t.type)
+        );
+        const tournamentEvents = confirmed.filter(
+          (t) => t.type === "Tournament"
+        );
+
+        const totalMinutes = confirmed.reduce(
+          (sum, t) => sum + (Number(t.duration) || 0),
+          0
+        );
+        const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+        const teamPlayers = players.filter((p) =>
+          p.teamIds && p.teamIds.includes(team.id)
+        );
+
+        const latestDate =
+          confirmed.length > 0
+            ? new Date(
+                confirmed
+                  .slice()
+                  .sort((a, b) => new Date(a.date) - new Date(b.date))
+                  [confirmed.length - 1].date
+              )
+            : new Date();
+
+        function computeAcwrForPlayer(playerId) {
+          let weeklyLoad = 0;
+          let chronicLoad = 0;
+          confirmed.forEach((t) => {
+            if (!t.playerIds.includes(playerId)) return;
+            if (!isPlayerPresent(t, playerId)) return;
+            const mins =
+              (t.playerMinutes && t.playerMinutes[playerId]) ||
+              Number(t.duration) ||
+              0;
+            const d = new Date(t.date);
+            const diffDays = (latestDate - d) / (1000 * 60 * 60 * 24);
+            if (diffDays <= 7) weeklyLoad += mins;
+            if (diffDays <= 28) chronicLoad += mins;
+          });
+          if (chronicLoad <= 0) return null;
+          const weeklyAvg = weeklyLoad / 7;
+          const chronicAvg = chronicLoad / 28;
+          if (chronicAvg <= 0) return null;
+          return Math.round((weeklyAvg / chronicAvg) * 100) / 100;
+        }
+
+        const playerStatsRaw = teamPlayers.map((p) => {
+          const sessions = confirmed.filter((t) =>
+            t.playerIds.includes(p.id)
+          );
+          const presentSessions = sessions.filter((t) =>
+            isPlayerPresent(t, p.id)
+          );
+
+          const trainingCount = presentSessions.filter(
+            (t) => t.type === "Training" || t.type === "Teambuilding"
+          ).length;
+          const matchCount = presentSessions.filter((t) =>
+            ["Match game", "Friendly game"].includes(t.type)
+          ).length;
+          const tournamentCount = presentSessions.filter(
+            (t) => t.type === "Tournament"
+          ).length;
+
+          let minutes = 0;
+          const gpsRecords = [];
+
+          presentSessions.forEach((t) => {
+            const mins =
+              (t.playerMinutes && t.playerMinutes[p.id]) ||
+              Number(t.duration) ||
+              0;
+            minutes += mins;
+            if (t.gps && t.gps[p.id]) {
+              gpsRecords.push(t.gps[p.id]);
+            }
+          });
+
+          let gpsSessions = gpsRecords.length;
+          let totalDist = 0;
+          let totalSprints = 0;
+          let totalHsr = 0;
+          let hsrCount = 0;
+          let maxSpeed = 0;
+          gpsRecords.forEach((g) => {
+            totalDist += g.distance || 0;
+            totalSprints += g.sprints || 0;
+            if (g.maxSpeed && g.maxSpeed > maxSpeed) maxSpeed = g.maxSpeed;
+            if (typeof g.hsr === "number") {
+              totalHsr += g.hsr;
+              hsrCount += 1;
+            }
+          });
+
+          const avgDist =
+            gpsSessions > 0
+              ? Math.round((totalDist / gpsSessions) * 10) / 10
+              : 0;
+          const avgSprints =
+            gpsSessions > 0
+              ? Math.round((totalSprints / gpsSessions) * 10) / 10
+              : 0;
+          const avgHsr =
+            hsrCount > 0
+              ? Math.round((totalHsr / hsrCount) * 10) / 10
+              : 0;
+
+          const hours = Math.round((minutes / 60) * 10) / 10;
+          const acwr = computeAcwrForPlayer(p.id);
+          const highRisk =
+            acwr != null && (acwr > 1.5 || (avgHsr && avgHsr > 6)); // simple flag
+
+          return {
+            player: p,
+            sessionsPresent: presentSessions.length,
+            trainingCount,
+            matchCount,
+            tournamentCount,
+            minutes,
+            hours,
+            gpsSessions,
+            totalDist: Math.round(totalDist * 10) / 10,
+            totalSprints,
+            avgDist,
+            avgSprints,
+            avgHsr,
+            maxSpeed: Math.round(maxSpeed * 10) / 10,
+            acwr,
+            highRisk,
+          };
+        });
+
+        const sortFields = {
+          Sessions: "sessionsPresent",
+          Trainings: "trainingCount",
+          Matches: "matchCount",
+          Tournaments: "tournamentCount",
+          Minutes: "minutes",
+          Hours: "hours",
+          "GPS sessions": "gpsSessions",
+          "Total dist": "totalDist",
+          "Avg dist": "avgDist",
+          "Total sprints": "totalSprints",
+          "Avg sprints": "avgSprints",
+          "Avg HSR": "avgHsr",
+          "Max speed": "maxSpeed",
+          ACWR: "acwr",
+        };
+
+        const handleSort = (fieldKey) => {
+          const field = sortFields[fieldKey];
+          if (!field) return;
+          setSortConfig((prev) => {
+            if (prev.field === field) {
+              return {
+                field,
+                dir: prev.dir === "asc" ? "desc" : "asc",
+              };
+            }
+            return { field, dir: "desc" };
+          });
+        };
+
+        const playerStats = playerStatsRaw.slice().sort((a, b) => {
+          const field = sortConfig.field;
+          if (!field) return 0;
+          const av = a[field] ?? 0;
+          const bv = b[field] ?? 0;
+          if (av === bv) return 0;
+          if (sortConfig.dir === "asc") return av > bv ? 1 : -1;
+          return av < bv ? 1 : -1;
+        });
+
+        const handleImportText = () => {
+          if (!gpsText.trim()) {
+            alert("Paste CSV or JSON GPS data first.");
+            return;
+          }
+          onImportGpsCsv(gpsText);
+          setGpsText("");
+        };
+
+        const handleFileChange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          onImportGpsFile(file);
+          e.target.value = "";
+        };
+
+        const handleExportMonthChange = (e) => {
+          setExportMonth(e.target.value);
+        };
+
+        const exportMonthlyAttendancePdf = () => {
+          if (!exportMonth) {
+            alert("Select year-month first.");
+            return;
+          }
+          const monthSessions = confirmed.filter(
+            (s) => getYearMonth(s.date) === exportMonth
+          );
+          if (monthSessions.length === 0) {
+            alert("No confirmed events for this month.");
+            return;
+          }
+
+          const win = window.open("", "_blank");
+          if (!win) {
+            alert("Popup blocked. Allow popups for this site to generate PDF.");
+            return;
+          }
+
+          const [y, m] = exportMonth.split("-");
+          const title = `Team attendance ${team.name} – ${m}.${y}`;
+
+          let html = `
+            <html>
+              <head>
+                <title>${title}</title>
+                <style>
+                  body { font-family: system-ui, sans-serif; padding: 16px; }
+                  h1 { font-size: 20px; margin-bottom: 8px; }
+                  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+                  th, td { border: 1px solid #333; padding: 4px 6px; text-align: left; }
+                  th { background: #eee; }
+                </style>
+              </head>
+              <body>
+                <h1>${title}</h1>
+                <p>Confirmed sessions only. Minutes per player are taken from attendance records.</p>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Time</th>
+                      <th>Players</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+          `;
+
+          monthSessions.forEach((s) => {
+            const playersPresent = teamPlayers
+              .filter((p) => s.playerIds.includes(p.id))
+              .filter((p) => isPlayerPresent(s, p.id))
+              .map((p) => {
+                const mins =
+                  (s.playerMinutes && s.playerMinutes[p.id]) ||
+                  Number(s.duration) ||
+                  0;
+                return `${p.name} (${mins} min)`;
+              });
+
+            html += `
+              <tr>
+                <td>${formatDate(s.date)}</td>
+                <td>${s.type}</td>
+                <td>${s.time}</td>
+                <td>${playersPresent.join("<br/>")}</td>
+              </tr>
+            `;
+          });
+
+          html += `
+                  </tbody>
+                </table>
+              </body>
+            </html>
+          `;
+
+          win.document.open();
+          win.document.write(html);
+          win.document.close();
+
+          win.focus();
+          win.print();
+        };
+
+        return (
+          <div>
+            <h2>Statistics – {team.name}</h2>
+            <p>
+              Event counts, minutes on field and{" "}
+              <strong>GPS statistics (including HSR)</strong> for every player.
+              Only <strong>confirmed events</strong> are included. Click table
+              headers to sort.
+            </p>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">Team events & load</h3>
+              <div className="stats-grid">
+                <div>
+                  <p className="stat-number">{confirmed.length}</p>
+                  <p className="stat-label">confirmed events</p>
+                </div>
+                <div>
+                  <p className="stat-number">{trainingEvents.length}</p>
+                  <p className="stat-label">trainings + teambuildings</p>
+                </div>
+                <div>
+                  <p className="stat-number">{matchEvents.length}</p>
+                  <p className="stat-label">match games & friendlies</p>
+                </div>
+                <div>
+                  <p className="stat-number">{tournamentEvents.length}</p>
+                  <p className="stat-label">tournaments</p>
+                </div>
+                <div>
+                  <p className="stat-number">{totalHours}</p>
+                  <p className="stat-label">total team hours on field</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">GPS import (JSON / CSV)</h3>
+              <p className="stat-label">
+                Paste JSON or CSV from StatsSport (or export from GPS device) or
+                upload a file. Players will be matched by{" "}
+                <strong>GPS device ID</strong> or by <strong>name</strong>.
+              </p>
+              <div className="form-group">
+                <label>Paste GPS data (JSON or CSV)</label>
+                <textarea
+                  className="report-textarea"
+                  value={gpsText}
+                  onChange={(e) => setGpsText(e.target.value)}
+                  placeholder='Example JSON: [{"gpsId": "12", "player": "John Player", "date": "2025-12-01", "distance": 7.3, "sprints": 18, "maxSpeed": 30.2, "hsr": 2.5}]'
+                />
+              </div>
+              <div className="form-actions">
+                <button
+                  className="btn-small"
+                  type="button"
+                  onClick={handleImportText}
+                  style={{ marginRight: 8 }}
+                >
+                  Import pasted GPS data
+                </button>
+                <label className="btn-small" style={{ cursor: "pointer" }}>
+                  Upload JSON / CSV file
+                  <input
+                    type="file"
+                    accept=".json,.csv,text/csv,application/json"
+                    style={{ display: "none" }}
+                    onChange={handleFileChange}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">Monthly attendance – PDF export</h3>
+              <div className="form" style={{ alignItems: "flex-end" }}>
+                <div className="form-group">
+                  <label>Month (YYYY-MM)</label>
+                  <input
+                    type="month"
+                    value={exportMonth}
+                    onChange={handleExportMonthChange}
+                  />
+                </div>
+                <div className="form-actions">
+                  <button
+                    className="btn-small"
+                    type="button"
+                    onClick={exportMonthlyAttendancePdf}
+                  >
+                    Export monthly attendance to PDF (print dialog)
+                  </button>
+                </div>
+              </div>
+              <p className="stat-label">
+                A printable HTML page will open. Use your browser’s{" "}
+                <strong>Print → Save as PDF</strong> to store the report.
+              </p>
+            </section>
+
+            <section className="card">
+              <h3 className="card-title">
+                Player statistics – attendance & GPS (sortable)
+              </h3>
+              <table className="players-table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Sessions")}
+                    >
+                      Sessions
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Trainings")}
+                    >
+                      Trainings
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Matches")}
+                    >
+                      Matches
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Tournaments")}
+                    >
+                      Tournaments
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Minutes")}
+                    >
+                      Minutes
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Hours")}
+                    >
+                      Hours
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("GPS sessions")}
+                    >
+                      GPS sessions
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Total dist")}
+                    >
+                      Total dist (km)
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Avg dist")}
+                    >
+                      Avg dist
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Total sprints")}
+                    >
+                      Total sprints
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Avg sprints")}
+                    >
+                      Avg sprints
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Avg HSR")}
+                    >
+                      Avg HSR
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("Max speed")}
+                    >
+                      Max speed
+                    </th>
+                    <th
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleSort("ACWR")}
+                    >
+                      ACWR
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {playerStats.map((s) => (
+                    <tr key={s.player.id}>
+                      <td
+                        className={
+                          s.player.injured ? "player-injured" : "player-name"
+                        }
+                      >
+                        {s.player.name}
+                        {s.highRisk && (
+                          <span className="high-risk-flag">HSR</span>
+                        )}
+                      </td>
+                      <td>{s.sessionsPresent}</td>
+                      <td>{s.trainingCount}</td>
+                      <td>{s.matchCount}</td>
+                      <td>{s.tournamentCount}</td>
+                      <td>{s.minutes}</td>
+                      <td>{s.hours}</td>
+                      <td>{s.gpsSessions}</td>
+                      <td>{s.totalDist}</td>
+                      <td>{s.avgDist}</td>
+                      <td>{s.totalSprints}</td>
+                      <td>{s.avgSprints}</td>
+                      <td>{s.avgHsr}</td>
+                      <td>{s.maxSpeed}</td>
+                      <td>{s.acwr != null ? s.acwr : "-"}</td>
+                    </tr>
+                  ))}
+                  {playerStats.length === 0 && (
+                    <tr>
+                      <td colSpan="15" style={{ color: "var(--muted)" }}>
+                        No players assigned to this team.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+          </div>
+        );
+      }
+
+      // ---- EVENT DETAIL MODAL ----
+      function EventDetailModal({
+        event,
+        players,
+        teams,
+        staff,
+        onClose,
+        onSaveEvent,
+      }) {
+        const [localEvent, setLocalEvent] = useState(event);
+
+        useEffect(() => {
+          setLocalEvent(event);
+        }, [event]);
+
+        if (!localEvent) return null;
+
+        const teamPlayers = players.filter((p) =>
+          localEvent.playerIds.includes(p.id)
+        );
+
+        const handleFieldChange = (e) => {
+          const { name, value } = e.target;
+          setLocalEvent((ev) => ({ ...ev, [name]: value }));
+        };
+
+        const handleNumberChange = (e) => {
+          const { name, value } = e.target;
+          setLocalEvent((ev) => ({
+            ...ev,
+            [name]: value === "" ? "" : Number(value),
+          }));
+        };
+
+        const handleFocusChange = (e) => {
+          const value = e.target.value;
+          const parts = value
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean);
+          setLocalEvent((ev) => ({ ...ev, focus: parts }));
+        };
+
+        const handleMinutesChange = (playerId, value) => {
+          const mins = value === "" ? "" : Number(value);
+          setLocalEvent((ev) => ({
+            ...ev,
+            playerMinutes: {
+              ...(ev.playerMinutes || {}),
+              [playerId]: mins,
+            },
+          }));
+        };
+
+        const togglePresent = (playerId, present) => {
+          setLocalEvent((ev) => {
+            const current = ev.playerAttendance || {};
+            const prev = current[playerId] || { present: true, reason: null };
+            return {
+              ...ev,
+              playerAttendance: {
+                ...current,
+                [playerId]: {
+                  ...prev,
+                  present,
+                  reason: present ? null : prev.reason || "absence",
+                },
+              },
+            };
+          });
+        };
+
+        const handleReasonChange = (playerId, reason) => {
+          setLocalEvent((ev) => {
+            const current = ev.playerAttendance || {};
+            const prev = current[playerId] || { present: true, reason: null };
+            return {
+              ...ev,
+              playerAttendance: {
+                ...current,
+                [playerId]: { ...prev, reason, present: false },
+              },
+            };
+          });
+        };
+
+        const handleRatingChange = (playerId, value) => {
+          const rating = value === "" ? "" : Number(value);
+          setLocalEvent((ev) => ({
+            ...ev,
+            playerRatings: {
+              ...(ev.playerRatings || {}),
+              [playerId]: rating,
+            },
+          }));
+        };
+
+        const toggleAttendanceConfirmed = (role) => {
+          setLocalEvent((ev) => ({
+            ...ev,
+            attendanceConfirmed: !ev.attendanceConfirmed,
+            confirmedByRole: !ev.attendanceConfirmed ? role : null,
+          }));
+        };
+
+        const handleSave = () => {
+          const cleaned = {
+            ...localEvent,
+            duration: Number(localEvent.duration) || 90,
+            playerMinutes: Object.fromEntries(
+              Object.entries(localEvent.playerMinutes || {}).map(
+                ([pid, val]) => [pid, Number(val) || 0]
+              )
+            ),
+            playerRatings: Object.fromEntries(
+              Object.entries(localEvent.playerRatings || {}).map(
+                ([pid, val]) => [pid, val === "" ? null : Number(val)]
+              )
+            ),
+          };
+          onSaveEvent(cleaned);
+          onClose();
+        };
+
+        const teamName = teams.find((t) => t.id === localEvent.teamId)?.name;
+        const focusText = localEvent.focus.join(", ");
+        const isMatch =
+          localEvent.type === "Match game" ||
+          localEvent.type === "Friendly game";
+
+        const attendanceReasons = ["sick", "injury", "absence", "other"];
+
+        return (
+          <div className="modal-backdrop">
+            <div className="modal">
+              <div className="modal-header">
+                <div>
+                  <div className="modal-title">
+                    Event details – {localEvent.type}
+                  </div>
+                  <div className="stat-label">
+                    {formatDate(localEvent.date)} {localEvent.time} ·{" "}
+                    {teamName || "Team"} · {localEvent.field} ·{" "}
+                    {localEvent.location || "no location"}
+                  </div>
+                </div>
+                <button className="modal-close" onClick={onClose}>
+                  ×
+                </button>
+              </div>
+
+              <h4 className="modal-section-title">Basic info</h4>
+              <div className="form">
+                <div className="form-group">
+                  <label>Type</label>
+                  <select
+                    name="type"
+                    value={localEvent.type}
+                    onChange={handleFieldChange}
+                  >
+                    <option value="Training">Training</option>
+                    <option value="Teambuilding">Teambuilding</option>
+                    <option value="Match game">Match game</option>
+                    <option value="Friendly game">Friendly game</option>
+                    <option value="Tournament">Tournament</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Time</label>
+                  <input
+                    name="time"
+                    value={localEvent.time}
+                    onChange={handleFieldChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Duration (minutes)</label>
+                  <input
+                    type="number"
+                    name="duration"
+                    value={localEvent.duration}
+                    onChange={handleNumberChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Field / pitch</label>
+                  <input
+                    name="field"
+                    value={localEvent.field}
+                    onChange={handleFieldChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Location</label>
+                  <input
+                    name="location"
+                    value={localEvent.location || ""}
+                    onChange={handleFieldChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Focus (comma separated)</label>
+                  <input
+                    value={focusText}
+                    onChange={handleFocusChange}
+                    placeholder="pressing, finishing..."
+                  />
+                </div>
+              </div>
+
+              {isMatch && (
+                <>
+                  <h4 className="modal-section-title">Match score</h4>
+                  <div className="form" style={{ marginBottom: 8 }}>
+                    <div className="form-group">
+                      <label>Home score</label>
+                      <input
+                        type="number"
+                        name="homeScore"
+                        value={
+                          localEvent.homeScore === null
+                            ? ""
+                            : localEvent.homeScore
+                        }
+                        onChange={handleNumberChange}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Away score</label>
+                      <input
+                        type="number"
+                        name="awayScore"
+                        value={
+                          localEvent.awayScore === null
+                            ? ""
+                            : localEvent.awayScore
+                        }
+                        onChange={handleNumberChange}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <h4 className="modal-section-title">
+                Attendance, minutes & reasons of missing
+              </h4>
+              <p className="stat-label">
+                Confirmed attendance is required to count this event into
+                statistics. For each player set minutes on field and reason of
+                missing (sick, injury, absence, other). For match games you can
+                also rate the performance 1–10.
+              </p>
+
+              <div style={{ marginBottom: 8 }}>
+                <button
+                  className="btn-small"
+                  type="button"
+                  onClick={() => toggleAttendanceConfirmed("Coach")}
+                >
+                  {localEvent.attendanceConfirmed
+                    ? "Unconfirm attendance"
+                    : "Confirm attendance (Coach)"}
+                </button>{" "}
+                {localEvent.attendanceConfirmed && (
+                  <span className="pill pill-success">
+                    Confirmed by {localEvent.confirmedByRole || "Coach"}
+                  </span>
+                )}
+              </div>
+
+              <table className="players-table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Present</th>
+                    <th>Missing reason</th>
+                    <th>Minutes on field</th>
+                    {isMatch && <th>Rating (1–10)</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamPlayers.map((p) => {
+                    const mins =
+                      (localEvent.playerMinutes &&
+                        localEvent.playerMinutes[p.id]) ||
+                      "";
+                    const pa =
+                      (localEvent.playerAttendance &&
+                        localEvent.playerAttendance[p.id]) || {
+                        present: true,
+                        reason: null,
+                      };
+                    const rating =
+                      localEvent.playerRatings &&
+                      localEvent.playerRatings[p.id] !== undefined
+                        ? localEvent.playerRatings[p.id]
+                        : "";
+                    return (
+                      <tr key={p.id}>
+                        <td>{p.name}</td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={pa.present !== false}
+                            onChange={(e) =>
+                              togglePresent(p.id, e.target.checked)
+                            }
+                          />
+                        </td>
+                        <td>
+                          {!pa.present && (
+                            <select
+                              value={pa.reason || "absence"}
+                              onChange={(e) =>
+                                handleReasonChange(p.id, e.target.value)
+                              }
+                            >
+                              {attendanceReasons.map((r) => (
+                                <option key={r} value={r}>
+                                  {r}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          {pa.present && (
+                            <span className="stat-label">—</span>
+                          )}
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            min="0"
+                            max="120"
+                            value={mins}
+                            onChange={(e) =>
+                              handleMinutesChange(p.id, e.target.value)
+                            }
+                            style={{ width: 80 }}
+                          />
+                        </td>
+                        {isMatch && (
+                          <td>
+                            <input
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={rating}
+                              onChange={(e) =>
+                                handleRatingChange(p.id, e.target.value)
+                              }
+                              style={{ width: 60 }}
+                            />
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 8,
+                  marginTop: 16,
+                }}
+              >
+                <button className="btn-small" type="button" onClick={onClose}>
+                  Cancel
+                </button>
+                <button className="btn-small" type="button" onClick={handleSave}>
+                  Save changes
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ---- SETTINGS PAGE ----
+      function SettingsPage({ settings, onUpdateSettings, onCheckApi, teams }) {
+        const handleThemeChange = (e) => {
+          const theme = e.target.value;
+          onUpdateSettings({ ...settings, theme });
+        };
+
+        const handleApiUrlChange = (teamId, value) => {
+          const prev = settings.teamApis || {};
+          const teamCfg = prev[teamId] || { url: "", status: "unknown" };
+          const next = {
+            ...prev,
+            [teamId]: { ...teamCfg, url: value, status: "unknown" },
+          };
+          onUpdateSettings({ ...settings, teamApis: next });
+        };
+
+        const handleCheckApiTeam = async (teamId) => {
+          const prev = settings.teamApis || {};
+          const cfg = prev[teamId];
+          if (!cfg || !cfg.url) {
+            alert("Enter API URL first.");
+            return;
+          }
+          const nextApis = {
+            ...prev,
+            [teamId]: { ...cfg, status: "checking" },
+          };
+          onUpdateSettings({ ...settings, teamApis: nextApis });
+
+          try {
+            const res = await fetch(cfg.url, { method: "GET" });
+            const status = res.ok ? "ok" : "error";
+            const finalApis = {
+              ...nextApis,
+              [teamId]: { ...nextApis[teamId], status },
+            };
+            onUpdateSettings({ ...settings, teamApis: finalApis });
+          } catch (e) {
+            const finalApis = {
+              ...nextApis,
+              [teamId]: { ...nextApis[teamId], status: "error" },
+            };
+            onUpdateSettings({ ...settings, teamApis: finalApis });
+          }
+        };
+
+        const [coachInviteTeamId, setCoachInviteTeamId] = useState(
+          teams[0]?.id || ""
+        );
+        const [staffInviteTeamId, setStaffInviteTeamId] = useState(
+          teams[0]?.id || ""
+        );
+        const [coachInviteLink, setCoachInviteLink] = useState("");
+        const [staffInviteLink, setStaffInviteLink] = useState("");
+        const [coachEmail, setCoachEmail] = useState("");
+        const [staffEmail, setStaffEmail] = useState("");
+
+        const createInviteLink = (role, teamId, email) => {
+          const base =
+            window.location.origin || "https://your-football-factory.app";
+          const token =
+            role +
+            "-" +
+            teamId +
+            "-" +
+            Math.random().toString(36).slice(2, 10);
+          const params = new URLSearchParams();
+          params.set("invite", token);
+          params.set("role", role);
+          params.set("teamId", String(teamId));
+          if (email) params.set("email", email);
+          return `${base}/?${params.toString()}`;
+        };
+
+        const handleCreateCoachInvite = () => {
+          if (!coachInviteTeamId) {
+            alert("Select team first.");
+            return;
+          }
+          const link = createInviteLink(
+            "coach",
+            coachInviteTeamId,
+            coachEmail || undefined
+          );
+          setCoachInviteLink(link);
+        };
+
+        const handleCreateStaffInvite = () => {
+          if (!staffInviteTeamId) {
+            alert("Select team first.");
+            return;
+          }
+          const link = createInviteLink(
+            "staff",
+            staffInviteTeamId,
+            staffEmail || undefined
+          );
+          setStaffInviteLink(link);
+        };
+
+        const themeValue = settings.theme || "dark";
+
+        const statusColor = (status) =>
+          status === "ok"
+            ? "var(--success)"
+            : status === "error"
+            ? "var(--danger)"
+            : status === "checking"
+            ? "var(--accent)"
+            : "#555";
+
+        const statusText = (status) =>
+          status === "ok"
+            ? "Connected"
+            : status === "error"
+            ? "Failed"
+            : status === "checking"
+            ? "Checking..."
+            : "Not checked";
+
+        return (
+          <div>
+            <h2>Settings</h2>
+            <p>
+              Global configuration of <strong>Football Factory</strong> – theme,
+              StatsSport API connectors per team and staff invitations. All
+              visual skin options are controlled here (not in top bar).
+            </p>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">Theme / skin</h3>
+              <div className="settings-row">
+                <div className="form-group" style={{ minWidth: 220 }}>
+                  <label>Theme</label>
+                  <select value={themeValue} onChange={handleThemeChange}>
+                    <option value="dark">Dark (current style)</option>
+                    <option value="light">Bright (white background)</option>
+                  </select>
+                </div>
+                <p className="stat-label">
+                  Light mode uses white background and dark text/lines. Dark
+                  mode uses the modern dark skin.
+                </p>
+              </div>
+            </section>
+
+            <section className="card" style={{ marginBottom: 16 }}>
+              <h3 className="card-title">StatsSport API per team</h3>
+              <p className="stat-label">
+                Each team (category) can have its own GPS API endpoint. Backend
+                can use these endpoints to sync GPS data into Football Factory.
+              </p>
+              {teams.length === 0 && (
+                <p className="stat-label">
+                  No teams yet. Add at least one team in the Teams section.
+                </p>
+              )}
+              {teams.map((t) => {
+                const cfg =
+                  (settings.teamApis && settings.teamApis[t.id]) || {};
+                const url = cfg.url || "";
+                const status = cfg.status || "unknown";
+                return (
+                  <div
+                    key={t.id}
+                    className="settings-row"
+                    style={{
+                      borderTop: "1px solid var(--border-subtle)",
+                      paddingTop: 8,
+                      marginTop: 8,
+                    }}
+                  >
+                    <div
+                      className="form-group"
+                      style={{ minWidth: 260, flex: 1 }}
+                    >
+                      <label>
+                        API endpoint URL – <strong>{t.name}</strong>
+                      </label>
+                      <input
+                        value={url}
+                        onChange={(e) =>
+                          handleApiUrlChange(t.id, e.target.value)
+                        }
+                        placeholder="https://api.statssport.com/..."
+                      />
+                    </div>
+                    <div>
+                      <button
+                        className="btn-small"
+                        type="button"
+                        onClick={() => handleCheckApiTeam(t.id)}
+                        style={{ marginRight: 8 }}
+                      >
+                        Check
+                      </button>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 13,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: "999px",
+                            background: statusColor(status),
+                            display: "inline-block",
+                          }}
+                        />
+                        {statusText(status)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+
+            <section className="card">
+              <h3 className="card-title">Invitations for coaches & staff</h3>
+              <p className="stat-label">
+                Generate invitation links for coaches and staff. They can open
+                the link, register themselves, create a password and will be
+                linked to the selected club/team in your backend logic.
+              </p>
+
+              <div className="form" style={{ marginBottom: 8 }}>
+                <div className="form-group">
+                  <label>Coach team</label>
+                  <select
+                    value={coachInviteTeamId}
+                    onChange={(e) =>
+                      setCoachInviteTeamId(Number(e.target.value))
+                    }
+                  >
+                    {teams.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Coach e-mail (optional)</label>
+                  <input
+                    value={coachEmail}
+                    onChange={(e) => setCoachEmail(e.target.value)}
+                    placeholder="coach@club.com"
+                  />
+                </div>
+                <div className="form-actions">
+                  <button
+                    className="btn-small"
+                    type="button"
+                    onClick={handleCreateCoachInvite}
+                  >
+                    Generate coach invite link
+                  </button>
+                </div>
+              </div>
+              {coachInviteLink && (
+                <p className="stat-label">
+                  Coach invite link:{" "}
+                  <span style={{ wordBreak: "break-all" }}>
+                    {coachInviteLink}
+                  </span>
+                </p>
+              )}
+
+              <hr style={{ borderColor: "var(--border-subtle)", margin: "12px 0" }} />
+
+              <div className="form" style={{ marginBottom: 8 }}>
+                <div className="form-group">
+                  <label>Staff team</label>
+                  <select
+                    value={staffInviteTeamId}
+                    onChange={(e) =>
+                      setStaffInviteTeamId(Number(e.target.value))
+                    }
+                  >
+                    {teams.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Staff e-mail (optional)</label>
+                  <input
+                    value={staffEmail}
+                    onChange={(e) => setStaffEmail(e.target.value)}
+                    placeholder="staff@club.com"
+                  />
+                </div>
+                <div className="form-actions">
+                  <button
+                    className="btn-small"
+                    type="button"
+                    onClick={handleCreateStaffInvite}
+                  >
+                    Generate staff invite link
+                  </button>
+                </div>
+              </div>
+              {staffInviteLink && (
+                <p className="stat-label">
+                  Staff invite link:{" "}
+                  <span style={{ wordBreak: "break-all" }}>
+                    {staffInviteLink}
+                  </span>
+                </p>
+              )}
+
+              <p className="stat-label" style={{ marginTop: 8 }}>
+                Implement the registration and permission logic on your backend
+                using the <code>invite</code> token and{" "}
+                <code>role/teamId</code> URL parameters.
+              </p>
+            </section>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
