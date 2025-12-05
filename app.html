@@ -777,7 +777,32 @@
         const [selectedEventId, setSelectedEventId] = useState(null);
         const [calendarNotes, setCalendarNotes] = useState({});
         const [staffInvitations, setStaffInvitations] = useState([]);
+        
+        function App() {
+  // ... your state hooks ...
 
+  // 👇 Add this effect at the top of App
+  useEffect(() => {
+    async function checkAuth() {
+      const {
+        data: { session },
+        error,
+      } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        console.error("Error checking session:", error);
+        return;
+      }
+
+      if (!session) {
+        // not logged in → go back to LOGIN page
+        window.location.href = "LOGIN.html";
+      }
+    }
+
+    checkAuth();
+  }, []);
+  
         // ---- INITIAL LOAD FROM SUPABASE ----
         useEffect(() => {
           async function loadInitialData() {
