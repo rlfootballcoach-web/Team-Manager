@@ -235,7 +235,7 @@
         <a href="#" id="btnForgot">Forgot password?</a>
       </div>
 
-      <button class="btn primary authBtn" id="btnLogin">LOGIN</button>
+      <button class="btn primary authBtn" id="btnLogin" type="button">LOGIN</button>
       <div class="muted" style="margin-top:10px;font-size:12px" id="authMsg"></div>
     </div>
   </div>
@@ -778,9 +778,42 @@
   </dialog>
 
 <script>
-  // Global error trap (shows why auth might stop reacting)
-  window.addEventListener("error", (e) => alert("JS Error: " + (e.message || "unknown")));
-  window.addEventListener("unhandledrejection", (e) => alert("Promise Error: " + (e.reason?.message || e.reason || "unknown")));
+  // =========================
+  // DEBUG + ERROR TRAP (remove later)
+  // =========================
+  (function(){
+    function mount(){
+      const box=document.createElement('div');
+      box.id='debugBox';
+      box.style.cssText=[
+        'position:fixed','bottom:10px','right:10px','z-index:999999',
+        'width:min(520px,95vw)','max-height:45vh','overflow:auto',
+        'padding:10px 12px','border-radius:12px',
+        'border:1px solid rgba(255,255,255,.18)',
+        'background:rgba(0,0,0,.75)','color:#e7eef8',
+        'font:12px/1.35 ui-sans-serif,system-ui','white-space:pre-wrap'
+      ].join(';');
+      box.textContent='DEBUG: loaded ' + new Date().toISOString() + '\n';
+      document.body.appendChild(box);
+
+      window.__dbg = (...args) => {
+        const line = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
+        box.textContent += line + '\n';
+        box.scrollTop = box.scrollHeight;
+        console.log('[DBG]', ...args);
+      };
+
+      window.addEventListener('error', (e)=>window.__dbg('JS ERROR:', e.message));
+      window.addEventListener('unhandledrejection', (e)=>window.__dbg('PROMISE ERROR:', e.reason?.message || String(e.reason)));
+      document.addEventListener('click', (e)=>{
+        const t = e.target.closest('button,a,input,select,textarea') || e.target;
+        window.__dbg('CLICK', t?.tagName || '', t?.id ? '#'+t.id : '', t?.className ? ('class='+t.className) : '');
+      }, true);
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
+    else mount();
+  })();
+
 
   // =========================
   // Supabase connection
@@ -794,6 +827,10 @@
   // Helpers
   // =========================
   const $ = (id) => document.getElementById(id);
+  const safe = (id) => document.getElementById(id) || null;
+  const bindClick = (id, fn) => { const el = safe(id); if(el) el.addEventListener('click', fn); else window.__dbg && window.__dbg('WARN missing', id); };
+  const bindChange = (id, fn) => { const el = safe(id); if(el) el.addEventListener('change', fn); else window.__dbg && window.__dbg('WARN missing', id); };
+  const bindInput = (id, fn) => { const el = safe(id); if(el) el.addEventListener('input', fn); else window.__dbg && window.__dbg('WARN missing', id); };
   const esc = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   const escAttr = (s) => esc(s).replaceAll('"',"&quot;");
   function setMsg(el, txt){ el.textContent = txt || ""; }
@@ -848,104 +885,48 @@
   });
 
   // =========================
-  // Auth
+  // Auth (robust, isolated)
   // =========================
-  // =========================================================
-  // AUTH (rebuilt, isolated, safe)
-  // =========================================================
-  function bindAuthUI(){
-    const msgEl = $("authMsg");
-    const emailEl = $("authEmail");
-    const passEl  = $("authPass");
-    const loginBtn = $("btnLogin");
-    const signupLink = $("btnSignupLink");
-    const forgotLink = $("btnForgot");
+  function showAuthMsg(msg){ setMsg($("authMsg"), msg || ""); }
 
-    const setAuthMsg = (t) => { if(msgEl) msgEl.textContent = t || ""; };
+  bindClick("btnLogin", async (e) => {
+    e?.preventDefault?.();
+    showAuthMsg("");
+    const email = ($("authEmail")?.value || "").trim();
+    const password = ($("authPass")?.value || "");
+    if(!email || !password) return showAuthMsg("Enter email and password.");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error) return showAuthMsg(error.message);
+    // onAuthStateChange will refresh the app
+  });
 
-    // Defensive: ensure buttons don't submit any forms
-    if(loginBtn) loginBtn.type = "button";
+  bindClick("btnSignupLink", async (e) => {
+    e?.preventDefault?.();
+    showAuthMsg("");
+    const email = ($("authEmail")?.value || "").trim();
+    const password = ($("authPass")?.value || "");
+    if(!email || !password) return showAuthMsg("Enter email and password first.");
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin }
+    });
+    if(error) return showAuthMsg(error.message);
+    if(!data.session) return showAuthMsg("Account created. Please confirm your email, then sign in.");
+    showAuthMsg("Account created and signed in.");
+  });
 
-    // Login
-    if(loginBtn){
-      loginBtn.addEventListener("click", async () => {
-        try{
-          setAuthMsg("");
-          const email = (emailEl?.value || "").trim();
-          const password = passEl?.value || "";
-          if(!email || !password) return setAuthMsg("Enter email and password.");
+  bindClick("btnForgot", async (e) => {
+    e?.preventDefault?.();
+    showAuthMsg("");
+    const email = ($("authEmail")?.value || "").trim();
+    if(!email) return showAuthMsg("Enter your email first.");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    if(error) return showAuthMsg(error.message);
+    showAuthMsg("Password reset email sent.");
+  });
 
-          const { error } = await supabase.auth.signInWithPassword({ email, password });
-          if(error) return setAuthMsg(error.message);
-          // onAuthStateChange will take over and refresh the app
-        }catch(err){
-          console.error(err);
-          setAuthMsg("Login failed. Check console.");
-        }
-      });
-    }
-
-    // Safe signup (minimal). No club creation here yet (we'll improve later).
-    if(signupLink){
-      signupLink.addEventListener("click", async (e) => {
-        e.preventDefault();
-        try{
-          setAuthMsg("");
-          const email = (emailEl?.value || "").trim();
-          const password = passEl?.value || "";
-          if(!email || !password) return setAuthMsg("Enter email and password to create account.");
-
-          const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: window.location.origin }
-          });
-          if(error) return setAuthMsg(error.message);
-
-          // If email confirmations are ON, session may be null.
-          if(!data?.session){
-            setAuthMsg("Account created. Please confirm your email, then sign in.");
-          }else{
-            setAuthMsg("Account created and signed in.");
-          }
-        }catch(err){
-          console.error(err);
-          setAuthMsg("Signup failed. Check console.");
-        }
-      });
-    }
-
-    // Forgot password
-    if(forgotLink){
-      forgotLink.addEventListener("click", async (e) => {
-        e.preventDefault();
-        try{
-          setAuthMsg("");
-          const email = (emailEl?.value || "").trim();
-          if(!email) return setAuthMsg("Enter your email first.");
-
-          const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin
-          });
-          if(error) return setAuthMsg(error.message);
-          setAuthMsg("Password reset email sent.");
-        }catch(err){
-          console.error(err);
-          setAuthMsg("Reset failed. Check console.");
-        }
-      });
-    }
-  }
-
-  // Bind auth UI after DOM is ready (isolated from the rest of the app)
-  window.addEventListener("DOMContentLoaded", bindAuthUI);
-
-
-  $("btnLogoutTop").onclick = async ()=>{
-    await supabase.auth.signOut();
-  };
-
-  supabase.auth.onAuthStateChange(async (_event, session) => {
+supabase.auth.onAuthStateChange(async (_event, session) => {
     sessionUser = session?.user || null;
     await hardRefreshApp();
   });
