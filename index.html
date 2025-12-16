@@ -4,12 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>FOOTBALL FACTORY — Supabase</title>
+
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
   <style>
     :root{
-      --bg:#0b0f14; --border:#223247; --text:#e7eef8; --muted:#9fb1c7;
-      --accent:#6ee7ff; --accent2:#a78bfa; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b;
-      --shadow: 0 10px 25px rgba(0,0,0,.35); --radius: 14px;
+      --bg:#0b0f14;
+      --border:#223247;
+      --text:#e7eef8;
+      --muted:#9fb1c7;
+      --accent:#6ee7ff;
+      --accent2:#a78bfa;
+      --good:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --radius: 14px;
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
     *{box-sizing:border-box}
@@ -19,6 +29,7 @@
         radial-gradient(900px 600px at 85% 0%, rgba(167,139,250,.10), transparent 60%),
         var(--bg);
     }
+    a{color:inherit}
     .app{display:grid; grid-template-columns:280px 1fr; min-height:100vh}
     .sidebar{
       position:sticky; top:0; height:100vh;
@@ -35,8 +46,15 @@
       width:44px; height:44px; border-radius:12px;
       overflow:hidden; display:flex; align-items:center; justify-content:center;
       background: conic-gradient(from 220deg, var(--accent), var(--accent2), var(--accent));
+      box-shadow: 0 0 0 2px rgba(255,255,255,.08) inset;
     }
-    .logo img{width:100%;height:100%;object-fit:contain;object-position:center;background:rgba(0,0,0,.12)}
+    .logo img{
+      width:100%;height:100%;
+      object-fit:contain;
+      object-position:center;
+      display:block;
+      background:rgba(0,0,0,.12);
+    }
     .brand h1{font-size:14px; margin:0; letter-spacing:.6px}
     .brand p{margin:2px 0 0; font-size:12px; color:var(--muted)}
     .nav{margin-top:16px; display:flex; flex-direction:column; gap:8px}
@@ -63,6 +81,7 @@
       display:flex; align-items:center; gap:10px;
       padding:10px 12px; border:1px solid var(--border); border-radius:12px;
       background:rgba(255,255,255,.03);
+      flex-wrap:wrap;
     }
     .btn{
       cursor:pointer; border:1px solid rgba(255,255,255,.10);
@@ -103,6 +122,16 @@
     }
     th{ text-align:left; color:var(--muted); background:rgba(255,255,255,.03); }
     .muted{color:var(--muted)}
+    .hr{height:1px; background:rgba(255,255,255,.08); margin:14px 0}
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px; border-radius:999px; font-size:11px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03);
+      color:var(--muted);
+    }
+    .dot{width:8px;height:8px;border-radius:50%}
+    .dot.good{background:var(--good)} .dot.bad{background:var(--bad)} .dot.warn{background:var(--warn)}
+
     .avatar{
       width:54px;height:54px;border-radius:16px;
       border:1px solid rgba(255,255,255,.12);
@@ -110,11 +139,7 @@
       overflow:hidden; display:flex; align-items:center; justify-content:center;
     }
     .avatar img{width:100%;height:100%;object-fit:cover;object-position:center}
-    .hr{height:1px; background:rgba(255,255,255,.08); margin:14px 0}
-    .pill{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:11px;
-      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); }
-    .dot{width:8px;height:8px;border-radius:50%}
-    .dot.good{background:var(--good)} .dot.bad{background:var(--bad)} .dot.warn{background:var(--warn)}
+
     dialog{
       width:min(720px, 94vw);
       border:1px solid rgba(255,255,255,.12);
@@ -132,6 +157,42 @@
       width:36px; height:36px;
       border-radius:12px; cursor:pointer;
     }
+
+    /* AUTH OVERLAY */
+    .authOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.65);
+      display:flex; align-items:center; justify-content:center;
+      z-index:9999;
+    }
+    .authOverlay.hide{ display:none; }
+    .authCard{
+      width:min(520px, 92vw);
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(900px 600px at 50% 0%, rgba(110,231,255,.08), transparent 55%),
+        linear-gradient(180deg, rgba(16,24,36,.98), rgba(10,14,20,.98));
+      box-shadow: 0 20px 45px rgba(0,0,0,.55);
+      padding:26px;
+    }
+    .authTitle{ font-size:26px; font-weight:900; margin:0 0 6px; }
+    .authSubtitle{ color:var(--muted); margin:0 0 18px; }
+    .authLinks{
+      display:flex; justify-content:space-between; gap:12px;
+      font-size:12px; margin-top:8px;
+    }
+    .authLinks a{ color: var(--accent); text-decoration:none; }
+    .authLinks a:hover{ text-decoration:underline; }
+    .authBtn{
+      width:100%;
+      margin-top:18px;
+      padding:14px 12px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:1px;
+    }
+
     @media (max-width: 980px){
       .app{grid-template-columns:1fr}
       .sidebar{height:auto; position:relative}
@@ -140,6 +201,33 @@
 </head>
 
 <body>
+  <!-- AUTH OVERLAY -->
+  <div id="authOverlay" class="authOverlay">
+    <div class="authCard">
+      <div class="authTitle">Sign In</div>
+      <div class="authSubtitle">Access your FOOTBALL FACTORY tools.</div>
+
+      <div class="field">
+        <label>Email</label>
+        <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input id="authPass" type="password" placeholder="Enter your password" autocomplete="current-password">
+      </div>
+
+      <div class="authLinks">
+        <a href="#" id="btnSignupLink">New here? <b>Create account</b></a>
+        <a href="#" id="btnForgot">Forgot password?</a>
+      </div>
+
+      <button class="btn primary authBtn" id="btnLogin">LOGIN</button>
+
+      <div class="muted" style="margin-top:10px;font-size:12px" id="authMsg"></div>
+    </div>
+  </div>
+
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
@@ -150,71 +238,45 @@
         </div>
       </div>
 
-      <div class="hr"></div>
-
-      <div class="card" id="authBox">
-        <div id="authLoggedOut">
-          <h3 style="margin:0 0 8px;font-size:14px">Login</h3>
-          <div class="field">
-            <label>Email</label>
-            <input id="authEmail" type="email" placeholder="you@club.com">
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <input id="authPass" type="password" placeholder="••••••••">
-          </div>
-          <div class="row">
-            <button class="btn primary" id="btnLogin">Sign in</button>
-            <button class="btn" id="btnSignup">Sign up</button>
-          </div>
-          <div class="muted" style="margin-top:10px;font-size:12px" id="authMsg"></div>
-        </div>
-
-        <div id="authLoggedIn" class="hide">
-          <div class="muted" style="font-size:12px">Signed in as:</div>
-          <div style="font-weight:800;margin-top:2px" id="userEmail">—</div>
-          <div class="hr"></div>
-
-          <div class="field">
-            <label>Club</label>
-            <select id="clubSelect"></select>
-          </div>
-
-          <div id="createClubBox" class="hide">
-            <div class="field">
-              <label>Create club (if none)</label>
-              <input id="newClubName" placeholder="FOOTBALL FACTORY">
-            </div>
-            <button class="btn primary" id="btnCreateClub">Create club</button>
-          </div>
-
-          <div class="hr"></div>
-          <button class="btn danger" id="btnLogout">Logout</button>
-          <div class="muted" style="margin-top:10px;font-size:12px" id="authMsg2"></div>
-        </div>
-      </div>
-
-      <nav class="nav" id="nav" style="margin-top:14px">
-        <button class="active" data-view="teams">👥 Teams <span class="chip" id="chipTeams">0</span></button>
+      <nav class="nav" id="nav">
+        <button class="active" data-view="dashboard">🏟️ Dashboard <span class="chip">team</span></button>
+        <button data-view="teams">👥 Teams <span class="chip" id="chipTeams">0</span></button>
         <button data-view="players">🧑 Players <span class="chip" id="chipPlayers">0</span></button>
         <button data-view="settings">⚙️ Settings</button>
       </nav>
+
+      <div class="hr"></div>
+      <div class="muted" style="font-size:12px" id="userBadge">Not signed in</div>
     </aside>
 
     <main class="content">
       <div class="topbar">
         <div class="topbarBox">
+          <span class="muted">Club:</span>
+          <select id="clubSelect"></select>
+          <button class="btn small" id="btnOpenCreateClub">+ Club</button>
+
           <span class="muted">Current category:</span>
           <select id="teamSelect"></select>
           <span class="pill" id="teamScopePill"><span class="dot warn"></span> no team selected</span>
         </div>
+
         <div class="row">
           <button class="btn" id="btnRefresh">Refresh</button>
+          <button class="btn danger" id="btnLogoutTop">Logout</button>
         </div>
       </div>
 
+      <!-- DASHBOARD -->
+      <section class="card" id="view-dashboard">
+        <h2 style="margin:0 0 10px;font-size:14px">Dashboard</h2>
+        <div class="muted">
+          You are connected to Supabase. Teams/Players are loaded from database. (Next: Events/Attendance/Staff.)
+        </div>
+      </section>
+
       <!-- TEAMS -->
-      <section class="card" id="view-teams">
+      <section class="card hide" id="view-teams">
         <h2 style="margin:0 0 10px;font-size:14px">Teams (Supabase)</h2>
 
         <div class="row">
@@ -241,9 +303,7 @@
           <tbody id="teamsTbody"></tbody>
         </table>
 
-        <div class="muted" style="margin-top:10px">
-          Note: you must be logged in and have club membership (owner/admin) to write, depending on your RLS.
-        </div>
+        <div class="muted" style="margin-top:10px;font-size:12px" id="teamsMsg"></div>
       </section>
 
       <!-- PLAYERS -->
@@ -299,12 +359,14 @@
           </thead>
           <tbody id="playersTbody"></tbody>
         </table>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="playersMsg"></div>
       </section>
 
       <!-- SETTINGS -->
       <section class="card hide" id="view-settings">
-        <h2 style="margin:0 0 10px;font-size:14px">Settings (Supabase Storage)</h2>
-        <div class="muted">Upload club logo to Storage (club-logos) and save to clubs.logo_path.</div>
+        <h2 style="margin:0 0 10px;font-size:14px">Settings</h2>
+        <div class="muted">Club name + logo stored in Supabase. Logo uses Storage bucket <b>club-logos</b>.</div>
 
         <div class="row">
           <div class="field">
@@ -320,12 +382,33 @@
         <div class="row">
           <button class="btn primary" id="btnSaveClub">Save club</button>
         </div>
-        <div class="muted" style="margin-top:10px;font-size:12px" id="settingsMsg"></div>
+
+        <div class="hr"></div>
+        <div class="muted" style="font-size:12px" id="settingsMsg"></div>
       </section>
+
     </main>
   </div>
 
-  <!-- Simple player dialog -->
+  <!-- Create club dialog -->
+  <dialog id="clubDlg">
+    <div class="dlg-top">
+      <h3 style="margin:0;font-size:14px">Create Club</h3>
+      <button class="x" id="clubDlgClose">✕</button>
+    </div>
+    <div class="hr"></div>
+    <div class="field">
+      <label>Club name</label>
+      <input id="newClubName" placeholder="FOOTBALL FACTORY">
+    </div>
+    <div class="row">
+      <button class="btn primary" id="btnCreateClub">Create</button>
+      <button class="btn" id="btnCancelCreateClub">Cancel</button>
+    </div>
+    <div class="muted" style="margin-top:10px;font-size:12px" id="clubCreateMsg"></div>
+  </dialog>
+
+  <!-- Player dialog -->
   <dialog id="playerDlg">
     <div class="dlg-top">
       <h3 style="margin:0;font-size:14px" id="playerDlgTitle">Player</h3>
@@ -353,21 +436,25 @@
   const SUPABASE_URL = "https://erwuthbupxazsogxblpv.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyd3V0aGJ1cHhhenNvZ3hibHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4MjgyMjUsImV4cCI6MjA4MTQwNDIyNX0.EB-o4onhhs6jkScQYq0oyX1YDFv2cloDUGHpULjUCvQ";
-
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // =========================
-  // Small helpers
+  // Helpers
   // =========================
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   const escAttr = (s) => esc(s).replaceAll('"',"&quot;");
-  const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
-
   function setMsg(el, txt){ el.textContent = txt || ""; }
   function setHide(el, hide){ el.classList.toggle("hide", !!hide); }
 
+  function showAuthOverlay(show){
+    $("authOverlay").classList.toggle("hide", !show);
+    document.body.style.overflow = show ? "hidden" : "";
+  }
+
+  // =========================
   // App state
+  // =========================
   let sessionUser = null;
   let currentClubId = "";
   let currentTeamId = "";
@@ -377,141 +464,126 @@
   // =========================
   // Navigation
   // =========================
-  const views = ["teams","players","settings"];
+  const views = ["dashboard","teams","players","settings"];
   $("nav").addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-view]");
     if(!btn) return;
     const view = btn.dataset.view;
     document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active", b===btn));
-    views.forEach(v => $( "view-"+v ).classList.toggle("hide", v!==view));
+    views.forEach(v => $("view-"+v).classList.toggle("hide", v!==view));
   });
 
   // =========================
-  // Auth UI
+  // Auth overlay actions
   // =========================
   $("btnLogin").onclick = async () => {
     setMsg($("authMsg"), "");
     const email = $("authEmail").value.trim();
     const password = $("authPass").value;
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error){ setMsg($("authMsg"), error.message); return; }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error) setMsg($("authMsg"), error.message);
   };
 
-  $("btnSignup").onclick = async () => {
+  $("btnSignupLink").onclick = async (e) => {
+    e.preventDefault();
     setMsg($("authMsg"), "");
     const email = $("authEmail").value.trim();
     const password = $("authPass").value;
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if(error){ setMsg($("authMsg"), error.message); return; }
-    setMsg($("authMsg"), "Signup successful. If email confirmation is enabled, confirm your email then login.");
+    const { error } = await supabase.auth.signUp({ email, password });
+    setMsg($("authMsg"), error ? error.message : "Account created. Now sign in.");
   };
 
-  $("btnLogout").onclick = async () => {
+  $("btnForgot").onclick = async (e) => {
+    e.preventDefault();
+    setMsg($("authMsg"), "");
+    const email = $("authEmail").value.trim();
+    if(!email) return setMsg($("authMsg"), "Enter your email first.");
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    setMsg($("authMsg"), error ? error.message : "Password reset email sent.");
+  };
+
+  $("btnLogoutTop").onclick = async ()=>{
     await supabase.auth.signOut();
   };
 
   supabase.auth.onAuthStateChange(async (_event, session) => {
     sessionUser = session?.user || null;
-    await renderAuthState();
+    await hardRefreshApp();
   });
 
-  async function renderAuthState(){
-    if(!sessionUser){
-      setHide($("authLoggedOut"), false);
-      setHide($("authLoggedIn"), true);
-      $("userEmail").textContent = "—";
-      currentClubId = "";
-      currentTeamId = "";
-      clubsCache = [];
-      teamsCache = [];
-      renderTeamSelector();
-      renderTeamsTable([]);
-      renderPlayersTable([]);
-      return;
-    }
-
-    setHide($("authLoggedOut"), true);
-    setHide($("authLoggedIn"), false);
-    $("userEmail").textContent = sessionUser.email || sessionUser.id;
-
-    // load clubs for this user (membership)
-    await loadClubsForUser();
-
-    // if no clubs, show create club UI
-    if(clubsCache.length === 0){
-      setHide($("createClubBox"), false);
-      $("clubSelect").innerHTML = `<option value="">(no clubs yet)</option>`;
-      currentClubId = "";
-      currentTeamId = "";
-      teamsCache = [];
-      renderTeamSelector();
-      renderTeamsTable([]);
-      renderPlayersTable([]);
-      return;
-    }
-
-    setHide($("createClubBox"), true);
-
-    // select first club if none selected
-    if(!currentClubId || !clubsCache.some(c=>c.id===currentClubId)){
-      currentClubId = clubsCache[0].id;
-    }
-    renderClubSelect();
-
-    // load club branding + teams
-    await loadClubBranding(currentClubId);
-    await loadTeams(currentClubId);
-
-    // choose first team if needed
-    if(!currentTeamId || !teamsCache.some(t=>t.id===currentTeamId)){
-      currentTeamId = teamsCache[0]?.id || "";
-    }
-    renderTeamSelector();
-
-    await refreshTeamScopedData();
-  }
-
-  $("clubSelect").addEventListener("change", async ()=>{
-    currentClubId = $("clubSelect").value || "";
-    currentTeamId = "";
-    await loadClubBranding(currentClubId);
-    await loadTeams(currentClubId);
-    currentTeamId = teamsCache[0]?.id || "";
-    renderTeamSelector();
-    await refreshTeamScopedData();
-  });
+  // =========================
+  // Club dialog
+  // =========================
+  const clubDlg = $("clubDlg");
+  $("clubDlgClose").onclick = ()=> clubDlg.close();
+  $("btnCancelCreateClub").onclick = ()=> clubDlg.close();
+  $("btnOpenCreateClub").onclick = ()=>{
+    if(!sessionUser) return;
+    setMsg($("clubCreateMsg"), "");
+    $("newClubName").value = "";
+    clubDlg.showModal();
+  };
 
   $("btnCreateClub").onclick = async ()=>{
+    if(!sessionUser) return;
+
+    setMsg($("clubCreateMsg"), "");
     const name = $("newClubName").value.trim() || "FOOTBALL FACTORY";
+
     const { data: club, error } = await supabase
       .from("clubs")
       .insert({ name })
       .select("*")
       .single();
 
-    if(error){ setMsg($("authMsg2"), error.message); return; }
+    if(error){
+      setMsg($("clubCreateMsg"), error.message);
+      return;
+    }
 
-    // add membership as owner (requires your RLS to allow inserting own membership or use admin)
+    // membership as owner (requires RLS policy allowing self-insert)
     const { error: mErr } = await supabase
       .from("club_members")
       .insert({ club_id: club.id, user_id: sessionUser.id, role: "owner" });
 
     if(mErr){
-      setMsg($("authMsg2"), "Club created, but membership insert failed: " + mErr.message);
+      setMsg($("clubCreateMsg"), "Club created but membership failed: " + mErr.message);
       return;
     }
 
-    $("newClubName").value = "";
-    setMsg($("authMsg2"), "Club created.");
-    await loadClubsForUser();
+    clubDlg.close();
     currentClubId = club.id;
-    renderClubSelect();
-    await loadClubBranding(currentClubId);
-    await loadTeams(currentClubId);
-    renderTeamSelector();
-    await refreshTeamScopedData();
+    currentTeamId = "";
+    await hardRefreshApp();
   };
 
+  // =========================
+  // Club select
+  // =========================
+  $("clubSelect").addEventListener("change", async ()=>{
+    currentClubId = $("clubSelect").value || "";
+    currentTeamId = "";
+    await hardRefreshApp();
+  });
+
+  // =========================
+  // Team select
+  // =========================
+  $("teamSelect").addEventListener("change", async ()=>{
+    currentTeamId = $("teamSelect").value || "";
+    renderTeamPill();
+    await loadPlayersForTeam(currentTeamId);
+  });
+
+  function renderTeamPill(){
+    const t = teamsCache.find(x=>x.id===currentTeamId);
+    if(!t) $("teamScopePill").innerHTML = `<span class="dot warn"></span> no team selected`;
+    else $("teamScopePill").innerHTML = `<span class="dot good"></span> ${esc(t.name)} view`;
+  }
+
+  // =========================
+  // Load clubs
+  // =========================
   async function loadClubsForUser(){
     // clubs via membership
     const { data, error } = await supabase
@@ -520,35 +592,41 @@
       .eq("user_id", sessionUser.id);
 
     if(error){
-      setMsg($("authMsg2"), error.message);
       clubsCache = [];
-      return;
+      return { error };
     }
 
     clubsCache = (data || [])
-      .map(x => ({ id: x.clubs.id, name: x.clubs.name, logo_path: x.clubs.logo_path, role: x.role }))
+      .map(x => ({ id: x.clubs?.id, name: x.clubs?.name, logo_path: x.clubs?.logo_path, role: x.role }))
       .filter(x => x.id);
 
-    setMsg($("authMsg2"), "");
+    return { error: null };
   }
 
   function renderClubSelect(){
-    $("clubSelect").innerHTML = clubsCache.map(c =>
-      `<option value="${c.id}">${esc(c.name)} (${esc(c.role)})</option>`
-    ).join("");
-    $("clubSelect").value = currentClubId;
-    $("clubNameInput").value = clubsCache.find(c=>c.id===currentClubId)?.name || "";
+    $("clubSelect").innerHTML =
+      (clubsCache.length ? clubsCache.map(c =>
+        `<option value="${c.id}">${esc(c.name)} (${esc(c.role)})</option>`
+      ).join("") : `<option value="">(no clubs)</option>`);
+
+    $("clubSelect").value = currentClubId || "";
+    const club = clubsCache.find(c=>c.id===currentClubId);
+    $("clubNameInput").value = club?.name || "";
   }
 
   async function loadClubBranding(clubId){
     if(!clubId) return;
-    const { data, error } = await supabase.from("clubs").select("id,name,logo_path").eq("id", clubId).single();
+
+    const { data, error } = await supabase.from("clubs")
+      .select("id,name,logo_path")
+      .eq("id", clubId)
+      .single();
+
     if(error) return;
 
     $("brandTitle").textContent = data.name || "FOOTBALL FACTORY";
     $("clubNameInput").value = data.name || "";
 
-    // logo
     const brandLogo = $("brandLogo");
     if(data.logo_path){
       const { data: url } = supabase.storage.from("club-logos").getPublicUrl(data.logo_path);
@@ -561,32 +639,37 @@
   }
 
   // =========================
-  // Teams (Supabase)
+  // Teams
   // =========================
   $("btnAddTeam").onclick = async ()=>{
     if(!sessionUser) return alert("Login first.");
     if(!currentClubId) return alert("Select a club first.");
 
+    setMsg($("teamsMsg"), "");
     const name = $("teamName").value.trim();
     if(!name) return alert("Enter team name.");
     const coaches_text = $("teamCoaches").value.split(",").map(s=>s.trim()).filter(Boolean);
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("teams")
-      .insert({ club_id: currentClubId, name, coaches_text })
-      .select("*");
+      .insert({ club_id: currentClubId, name, coaches_text });
 
-    if(error){ alert(error.message); return; }
+    if(error){
+      setMsg($("teamsMsg"), error.message);
+      return;
+    }
 
     $("teamName").value = "";
     $("teamCoaches").value = "";
     await loadTeams(currentClubId);
+
     if(!currentTeamId) currentTeamId = teamsCache[0]?.id || "";
     renderTeamSelector();
-    await refreshTeamScopedData();
+    await loadPlayersForTeam(currentTeamId);
   };
 
   async function loadTeams(clubId){
+    setMsg($("teamsMsg"), "");
     const { data, error } = await supabase
       .from("teams")
       .select("*")
@@ -595,9 +678,9 @@
       .order("name", { ascending: true });
 
     if(error){
-      alert("Teams load error: " + error.message);
       teamsCache = [];
       renderTeamsTable([]);
+      setMsg($("teamsMsg"), error.message);
       return;
     }
 
@@ -607,8 +690,7 @@
   }
 
   function renderTeamsTable(teams){
-    const tbody = $("teamsTbody");
-    tbody.innerHTML = teams.map(t=>`
+    $("teamsTbody").innerHTML = teams.map(t=>`
       <tr>
         <td><b>${esc(t.name)}</b></td>
         <td class="muted">${esc((t.coaches_text||[]).join(", "))}</td>
@@ -621,45 +703,33 @@
   }
 
   async function deleteTeam(teamId){
-    if(!confirm("Delete team? (This will also remove its events later)")) return;
+    if(!confirm("Delete team?")) return;
     const { error } = await supabase.from("teams").delete().eq("id", teamId);
-    if(error){ alert(error.message); return; }
+    if(error) return alert(error.message);
+
     await loadTeams(currentClubId);
     if(currentTeamId === teamId) currentTeamId = teamsCache[0]?.id || "";
     renderTeamSelector();
-    await refreshTeamScopedData();
+    await loadPlayersForTeam(currentTeamId);
   }
 
-  // =========================
-  // Team selector (scope)
-  // =========================
-  $("teamSelect").addEventListener("change", async ()=>{
-    currentTeamId = $("teamSelect").value || "";
-    renderTeamPill();
-    await refreshTeamScopedData();
-  });
-
   function renderTeamSelector(){
-    $("teamSelect").innerHTML = `<option value="">(select team)</option>` +
+    $("teamSelect").innerHTML =
+      `<option value="">(select team)</option>` +
       teamsCache.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
     $("teamSelect").value = currentTeamId || "";
     renderTeamPill();
   }
 
-  function renderTeamPill(){
-    const pill = $("teamScopePill");
-    const t = teamsCache.find(x=>x.id===currentTeamId);
-    if(!t) pill.innerHTML = `<span class="dot warn"></span> no team selected`;
-    else pill.innerHTML = `<span class="dot good"></span> ${esc(t.name)} view`;
-  }
-
   // =========================
-  // Players (Supabase, team scoped)
+  // Players
   // =========================
   $("btnAddPlayer").onclick = async ()=>{
     if(!sessionUser) return alert("Login first.");
     if(!currentClubId) return alert("Select club first.");
     if(!currentTeamId) return alert("Select team first.");
+
+    setMsg($("playersMsg"), "");
 
     const full_name = $("pName").value.trim();
     const dob = $("pDob").value;
@@ -673,24 +743,20 @@
     // 1) create player row
     const { data: player, error: pErr } = await supabase
       .from("players")
-      .insert({
-        club_id: currentClubId,
-        full_name,
-        dob,
-        jersey_number,
-        positions,
-        parent_contacts
-      })
+      .insert({ club_id: currentClubId, full_name, dob, jersey_number, positions, parent_contacts })
       .select("*")
       .single();
 
-    if(pErr){ alert(pErr.message); return; }
+    if(pErr){
+      setMsg($("playersMsg"), pErr.message);
+      return;
+    }
 
-    // 2) upload photo (optional)
+    // 2) upload photo optional
     const file = $("pPhoto").files?.[0] || null;
     if(file){
       const ok = ["image/png","image/jpeg"].includes(file.type);
-      if(!ok){ alert("Photo must be PNG/JPG."); return; }
+      if(!ok) return alert("Photo must be PNG/JPG.");
 
       const ext = (file.type === "image/png") ? "png" : "jpg";
       const path = `${currentClubId}/${player.id}.${ext}`;
@@ -699,22 +765,31 @@
         .from("player-photos")
         .upload(path, file, { upsert: true, contentType: file.type });
 
-      if(upErr){ alert("Upload error: " + upErr.message); return; }
+      if(upErr){
+        setMsg($("playersMsg"), "Upload error: " + upErr.message);
+        return;
+      }
 
       const { error: uErr } = await supabase
         .from("players")
         .update({ photo_path: path })
         .eq("id", player.id);
 
-      if(uErr){ alert("Photo path save error: " + uErr.message); return; }
+      if(uErr){
+        setMsg($("playersMsg"), "Photo path save error: " + uErr.message);
+        return;
+      }
     }
 
-    // 3) assign to team (player_teams)
+    // 3) assign to team
     const { error: linkErr } = await supabase
       .from("player_teams")
       .insert({ player_id: player.id, team_id: currentTeamId });
 
-    if(linkErr){ alert("Team link error: " + linkErr.message); return; }
+    if(linkErr){
+      setMsg($("playersMsg"), "Team link error: " + linkErr.message);
+      return;
+    }
 
     // clear form
     $("pName").value=""; $("pDob").value=""; $("pJersey").value=""; $("pPos").value=""; $("pParent").value="";
@@ -724,13 +799,13 @@
   };
 
   async function loadPlayersForTeam(teamId){
+    setMsg($("playersMsg"), "");
     if(!teamId){
       renderPlayersTable([]);
       $("chipPlayers").textContent = "0";
       return;
     }
 
-    // join via player_teams -> players
     const { data, error } = await supabase
       .from("player_teams")
       .select("player_id, players:player_id(id,full_name,dob,jersey_number,positions,parent_contacts,photo_path)")
@@ -738,8 +813,8 @@
       .is("left_at", null);
 
     if(error){
-      alert("Players load error: " + error.message);
       renderPlayersTable([]);
+      setMsg($("playersMsg"), error.message);
       return;
     }
 
@@ -757,42 +832,34 @@
   }
 
   function renderPlayersTable(players){
-    const tbody = $("playersTbody");
-    tbody.innerHTML = players.map(p=>{
+    $("playersTbody").innerHTML = players.map(p=>{
       const url = playerPhotoUrl(p.photo_path);
       return `
         <tr>
-          <td>
-            <div class="avatar">${url ? `<img src="${escAttr(url)}" alt="photo">` : `<span class="muted">—</span>`}</div>
-          </td>
+          <td><div class="avatar">${url ? `<img src="${escAttr(url)}" alt="photo">` : `<span class="muted">—</span>`}</div></td>
           <td>
             <b>${esc(p.full_name)}</b>
             <div class="muted">DOB: ${esc(p.dob)} • Parent: ${esc(p.parent_contacts||"—")}</div>
           </td>
           <td>${Number(p.jersey_number||0)}</td>
           <td class="muted">${esc(p.positions||"")}</td>
-          <td>
-            <button class="btn small" onclick="window.app.openPlayer('${p.id}')">Profile</button>
-          </td>
+          <td><button class="btn small" onclick="window.app.openPlayer('${p.id}')">Profile</button></td>
         </tr>
       `;
     }).join("") || `<tr><td colspan="5" class="muted">No players in this team.</td></tr>`;
   }
 
-  // Player dialog (delete)
+  // =========================
+  // Player dialog
+  // =========================
   const playerDlg = $("playerDlg");
   $("playerDlgClose").onclick = ()=> playerDlg.close();
   let activePlayerId = "";
 
   async function openPlayer(playerId){
     activePlayerId = playerId;
-    const { data: p, error } = await supabase
-      .from("players")
-      .select("*")
-      .eq("id", playerId)
-      .single();
-
-    if(error){ alert(error.message); return; }
+    const { data: p, error } = await supabase.from("players").select("*").eq("id", playerId).single();
+    if(error) return alert(error.message);
 
     $("playerDlgTitle").textContent = p.full_name;
     $("ppName").textContent = p.full_name;
@@ -808,12 +875,10 @@
 
   $("btnDeletePlayer").onclick = async ()=>{
     if(!activePlayerId) return;
-
     if(!confirm("Delete player completely?")) return;
 
-    // Note: this deletes player row and cascades player_teams via FK
     const { error } = await supabase.from("players").delete().eq("id", activePlayerId);
-    if(error){ alert(error.message); return; }
+    if(error) return alert(error.message);
 
     playerDlg.close();
     await loadPlayersForTeam(currentTeamId);
@@ -823,15 +888,21 @@
   // Settings: club name + logo upload
   // =========================
   $("btnSaveClub").onclick = async ()=>{
+    if(!sessionUser) return;
     if(!currentClubId) return alert("Select a club.");
+
+    setMsg($("settingsMsg"), "");
+
     const name = $("clubNameInput").value.trim() || "FOOTBALL FACTORY";
 
-    // upload logo optional
+    // logo optional
     let logo_path = null;
     const file = $("clubLogoFile").files?.[0] || null;
+
     if(file){
       const ok = ["image/png","image/jpeg"].includes(file.type);
-      if(!ok){ alert("Logo must be PNG/JPG."); return; }
+      if(!ok) return alert("Logo must be PNG/JPG.");
+
       const ext = (file.type === "image/png") ? "png" : "jpg";
       logo_path = `${currentClubId}/logo.${ext}`;
 
@@ -839,43 +910,108 @@
         .from("club-logos")
         .upload(logo_path, file, { upsert: true, contentType: file.type });
 
-      if(upErr){ setMsg($("settingsMsg"), upErr.message); return; }
+      if(upErr){
+        setMsg($("settingsMsg"), upErr.message);
+        return;
+      }
     }
 
     const payload = { name };
     if(logo_path) payload.logo_path = logo_path;
 
     const { error } = await supabase.from("clubs").update(payload).eq("id", currentClubId);
-    if(error){ setMsg($("settingsMsg"), error.message); return; }
+    if(error){
+      setMsg($("settingsMsg"), error.message);
+      return;
+    }
 
     setMsg($("settingsMsg"), "Saved.");
     $("clubLogoFile").value = "";
+
     await loadClubsForUser();
     renderClubSelect();
     await loadClubBranding(currentClubId);
   };
 
   // =========================
-  // Refresh button
+  // Refresh
   // =========================
-  $("btnRefresh").onclick = async ()=>{
-    if(!sessionUser) return;
-    await loadClubsForUser();
+  $("btnRefresh").onclick = async ()=> {
+    await hardRefreshApp();
+  };
+
+  // =========================
+  // HARD refresh app after auth/login/logout/save
+  // =========================
+  async function hardRefreshApp(){
+    if(!sessionUser){
+      showAuthOverlay(true);
+      $("userBadge").textContent = "Not signed in";
+
+      currentClubId = "";
+      currentTeamId = "";
+      clubsCache = [];
+      teamsCache = [];
+
+      $("clubSelect").innerHTML = `<option value="">(login required)</option>`;
+      $("teamSelect").innerHTML = `<option value="">(select team)</option>`;
+      renderTeamPill();
+
+      $("chipTeams").textContent = "0";
+      $("chipPlayers").textContent = "0";
+      renderTeamsTable([]);
+      renderPlayersTable([]);
+      return;
+    }
+
+    showAuthOverlay(false);
+    $("userBadge").textContent = `Signed in: ${sessionUser.email || sessionUser.id}`;
+
+    const { error } = await loadClubsForUser();
+    if(error){
+      alert("Club load error: " + error.message);
+      return;
+    }
+
+    if(clubsCache.length === 0){
+      // No club yet -> user must create one
+      $("clubSelect").innerHTML = `<option value="">(no clubs — click + Club)</option>`;
+      $("brandTitle").textContent = "FOOTBALL FACTORY";
+      $("brandLogo").innerHTML = "";
+      $("brandLogo").style.background = "conic-gradient(from 220deg, var(--accent), var(--accent2), var(--accent))";
+      teamsCache = [];
+      renderTeamsTable([]);
+      renderPlayersTable([]);
+      $("chipTeams").textContent = "0";
+      $("chipPlayers").textContent = "0";
+      return;
+    }
+
+    if(!currentClubId || !clubsCache.some(c=>c.id===currentClubId)){
+      currentClubId = clubsCache[0].id;
+    }
+
     renderClubSelect();
     await loadClubBranding(currentClubId);
+
     await loadTeams(currentClubId);
-    renderTeamSelector();
-    await refreshTeamScopedData();
-  };
+    if(!currentTeamId || !teamsCache.some(t=>t.id===currentTeamId)){
+      currentTeamId = teamsCache[0]?.id || "";
+    }
 
-  async function refreshTeamScopedData(){
-    renderTeamPill();
-    renderTeamsTable(teamsCache);
+    renderTeamSelector();
     await loadPlayersForTeam(currentTeamId);
   }
 
+  function renderClubSelect(){
+    $("clubSelect").innerHTML = clubsCache.map(c =>
+      `<option value="${c.id}">${esc(c.name)} (${esc(c.role)})</option>`
+    ).join("");
+    $("clubSelect").value = currentClubId || "";
+  }
+
   // =========================
-  // Global API for onclicks
+  // Global onclick API
   // =========================
   window.app = {
     setTeam: async (teamId) => {
@@ -889,12 +1025,12 @@
   };
 
   // =========================
-  // Initial session
+  // Init
   // =========================
   (async function init(){
     const { data } = await supabase.auth.getSession();
     sessionUser = data.session?.user || null;
-    await renderAuthState();
+    await hardRefreshApp();
   })();
 </script>
 </body>
