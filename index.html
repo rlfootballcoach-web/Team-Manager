@@ -355,11 +355,11 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
       </div>
 
       <div class="authLinks">
-        <a href="#" id="btnSignupLink">New here? <b>Create account</b></a>
+        <a href="#" id="btnSignupLink" onclick="openSignupFromLogin(event)">New here? <b>Create account</b></a>
         <a href="#" id="btnForgot">Forgot password?</a>
       </div>
 
-      <button class="btn primary authBtn" id="btnLogin">LOGIN</button>
+      <button class="btn primary authBtn" id="btnLogin" type="button" onclick="handleLoginClick()">LOGIN</button>
       <div class="muted" style="margin-top:10px;font-size:12px" id="authMsg"></div>
     </div>
   </div>
@@ -921,6 +921,42 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyd3V0aGJ1cHhhenNvZ3hibHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4MjgyMjUsImV4cCI6MjA4MTQwNDIyNX0.EB-o4onhhs6jkScQYq0oyX1YDFv2cloDUGHpULjUCvQ";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
+  // =========================================================
+  // Bulletproof inline handlers (ensures Login/Register always reacts)
+  // =========================================================
+  window.handleLoginClick = async function () {
+    try {
+      const email = (document.getElementById("authEmail")?.value || "").trim();
+      const password = document.getElementById("authPass")?.value || "";
+      const msg = document.getElementById("authMsg");
+      if (msg) msg.textContent = "";
+
+      if (!email || !password) {
+        if (msg) msg.textContent = "Enter email and password.";
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (msg) msg.textContent = error.message;
+        return;
+      }
+      // onAuthStateChange will handle UI transition + loading
+    } catch (e) {
+      alert("Login failed: " + (e?.message || e));
+    }
+  };
+
+  window.openSignupFromLogin = function (e) {
+    e.preventDefault();
+    const loginOverlay = document.getElementById("authOverlay");
+    if (loginOverlay) loginOverlay.classList.add("hide");
+    const signupOverlay = document.getElementById("signupOverlay");
+    if (signupOverlay) signupOverlay.classList.remove("hide");
+  };
+
 
   // =========================
   // Helpers
