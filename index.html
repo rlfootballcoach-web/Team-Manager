@@ -778,6 +778,18 @@
   </dialog>
 
 <script>
+
+  // =========================================================
+  // Global error trap (helps reveal the real issue if any JS crashes)
+  // =========================================================
+  window.addEventListener("error", (e) => {
+    alert("JS Error: " + (e.message || "unknown"));
+  });
+  window.addEventListener("unhandledrejection", (e) => {
+    alert("Promise Error: " + (e.reason?.message || e.reason || "unknown"));
+  });
+
+
   // =========================
   // Supabase connection
   // =========================
@@ -872,9 +884,16 @@
     setMsg($("authMsg"), error ? error.message : "Password reset email sent.");
   };
 
-  $("btnLogoutTop").onclick = async ()=>{
+  // Robust bindings (won't crash if IDs change/missing)
+  const refreshBtn = $("btnRefresh");
+  if (refreshBtn) refreshBtn.addEventListener("click", async () => {
+    await hardRefreshApp();
+  });
+
+  const logoutBtn = $("btnLogoutTop");
+  if (logoutBtn) logoutBtn.addEventListener("click", async () => {
     await supabase.auth.signOut();
-  };
+  });
 
   supabase.auth.onAuthStateChange(async (_event, session) => {
     sessionUser = session?.user || null;
@@ -1994,11 +2013,8 @@
   };
 
   // =========================
-  // Refresh button
+  // Refresh button (bound via robust bindings above)
   // =========================
-  $("btnRefresh").onclick = async ()=> {
-    await hardRefreshApp();
-  };
 
   // =========================
   // Central refresh after auth / team change
