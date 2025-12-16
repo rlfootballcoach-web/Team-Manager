@@ -902,6 +902,18 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
   </dialog>
 
 <script>
+
+  // =========================================================
+  // Global error trap (shows the real reason if JS stops)
+  // =========================================================
+  window.addEventListener("error", (e) => {
+    alert("JS Error: " + (e.message || "unknown"));
+  });
+  window.addEventListener("unhandledrejection", (e) => {
+    alert("Promise Error: " + (e.reason?.message || e.reason || "unknown"));
+  });
+
+
   // =========================
   // Supabase connection
   // =========================
@@ -914,6 +926,10 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
   // Helpers
   // =========================
   const $ = (id) => document.getElementById(id);
+  const onClick = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
+  const onChange = (id, fn) => { const el = $(id); if (el) el.addEventListener("change", fn); };
+  const onInput = (id, fn) => { const el = $(id); if (el) el.addEventListener("input", fn); };
+
   const esc = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   const escAttr = (s) => esc(s).replaceAll('"',"&quot;");
   function setMsg(el, txt){ el.textContent = txt || ""; }
@@ -972,8 +988,8 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
   // =========================
   onClick("btnLogin", async () => {
     setMsg($("authMsg"), "");
-    const email = $("authEmail").value.trim();
-    const password = $("authPass").value;
+    const email = ($("authEmail")?.value || "").trim();
+    const password = $("authPass")?.value || "";
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if(error) setMsg($("authMsg"), error.message);
   });
@@ -987,7 +1003,7 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
   onClick("btnForgot", async (e) => {
     e.preventDefault();
     setMsg($("authMsg"), "");
-    const email = $("authEmail").value.trim();
+    const email = ($("authEmail")?.value || "").trim();
     if(!email) return setMsg($("authMsg"), "Enter your email first.");
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     setMsg($("authMsg"), error ? error.message : "Password reset email sent.");
