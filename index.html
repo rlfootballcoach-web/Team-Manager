@@ -603,6 +603,68 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
         </div>
 
         <div class="muted" style="margin-top:10px;font-size:12px" id="staffMsg"></div>
+        <div class="hr"></div>
+
+        <div class="card">
+          <div class="row" style="justify-content:space-between; align-items:center">
+            <div>
+              <div style="font-weight:900">Invite coach (copy link)</div>
+              <div class="muted" style="font-size:12px">Creates an invite token in <b>coach_invites</b>. Share the link with the coach (no email sending).</div>
+            </div>
+            <span class="badge" id="inviteScopeBadge">Club admin only</span>
+          </div>
+
+          <div class="row">
+            <div class="field" style="min-width:240px">
+              <label>Coach email</label>
+              <input id="invEmail" type="email" placeholder="coach@example.com">
+            </div>
+            <div class="field" style="min-width:220px">
+              <label>Role</label>
+              <select id="invRole">
+                <option value="coach">Coach</option>
+                <option value="assistant">Assistant</option>
+                <option value="gk_coach">Goalkeeper Coach</option>
+                <option value="staff">Staff</option>
+              </select>
+            </div>
+            <div class="field" style="min-width:220px">
+              <label>Team (optional)</label>
+              <select id="invTeam"></select>
+            </div>
+            <div class="field" style="min-width:170px">
+              <label>&nbsp;</label>
+              <button class="btn primary" id="btnCreateInvite">Create invite</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Generated invite link</label>
+            <input id="invLink" readonly placeholder="Create an invite to generate link...">
+            <div class="row" style="margin-top:8px">
+              <button class="btn" id="btnCopyInviteLink">Copy link</button>
+              <span class="muted" id="invMsg" style="font-size:12px"></span>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="muted" style="margin-bottom:8px">Invites (current club)</div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Team</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invitesTbody"></tbody>
+          </table>
+        </div>
+
       </section>
 
       <!-- EVENTS -->
@@ -1215,6 +1277,9 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
     if(!currentTeamId) currentTeamId = teamsCache[0]?.id || "";
     renderTeamSelector();
     await refreshTeamScopedData();
+    renderInviteTeamSelect();
+    await loadInvites();
+    await acceptInviteFromUrlIfPresent();
   };
 
   function renderTeamsTable(teams){
@@ -1239,6 +1304,9 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
     if(currentTeamId === teamId) currentTeamId = teamsCache[0]?.id || "";
     renderTeamSelector();
     await refreshTeamScopedData();
+    renderInviteTeamSelect();
+    await loadInvites();
+    await acceptInviteFromUrlIfPresent();
   }
 
   // =========================
@@ -2270,6 +2338,9 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
 
     renderTeamSelector();
     await refreshTeamScopedData();
+    renderInviteTeamSelect();
+    await loadInvites();
+    await acceptInviteFromUrlIfPresent();
   }
 
   // =========================
@@ -2459,5 +2530,211 @@ l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
     currentTeamId = "";
     await hardRefreshApp();
   });
+
+
+  // =========================================================
+  // Invites (Option A: copy invite link, no email sending)
+  // =========================================================
+  function renderInviteTeamSelect(){
+    const sel = $("invTeam");
+    if(!sel) return;
+    sel.innerHTML = `<option value="">(no team)</option>` + (teamsCache||[]).map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
+    sel.value = "";
+  }
+
+  async function loadInvites(){
+    const tb = $("invitesTbody");
+    if(!tb) return;
+    if(!currentClubId){
+      tb.innerHTML = `<tr><td colspan="6" class="muted">Select a club.</td></tr>`;
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("coach_invites")
+      .select("id, invited_email, role, team_id, token, created_at, expires_at, used_at, revoked_at")
+      .eq("club_id", currentClubId)
+      .order("created_at", { ascending:false })
+      .limit(50);
+
+    if(error){
+      tb.innerHTML = `<tr><td colspan="6" class="muted">Invite load error: ${esc(error.message)}</td></tr>`;
+      return;
+    }
+
+    const teamNameById = Object.fromEntries((teamsCache||[]).map(t=>[t.id, t.name]));
+    tb.innerHTML = (data||[]).map(inv=>{
+      const status =
+        inv.revoked_at ? `<span class="badge bad">Revoked</span>` :
+        inv.used_at ? `<span class="badge good">Used</span>` :
+        (new Date(inv.expires_at) < new Date()) ? `<span class="badge warn">Expired</span>` :
+        `<span class="badge">Active</span>`;
+
+      const link = `${location.origin}${location.pathname}?invite=${inv.token}`;
+      const actions = inv.revoked_at ? `—` : `
+        <button class="btn small" onclick="window.app.copyInviteLink('${escAttr(link)}')">Copy</button>
+        <button class="btn small danger" onclick="window.app.revokeInvite('${inv.id}')">Revoke</button>
+      `;
+      return `
+        <tr>
+          <td><b>${esc(inv.invited_email)}</b></td>
+          <td class="muted">${esc(inv.role)}</td>
+          <td class="muted">${esc(teamNameById[inv.team_id] || "—")}</td>
+          <td>${status}</td>
+          <td class="muted">${esc(fmtDT(inv.created_at))}</td>
+          <td>${actions}</td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="6" class="muted">No invites yet.</td></tr>`;
+  }
+
+  function setInvMsg(msg){ const el=$("invMsg"); if(el) el.textContent = msg||""; }
+
+  onClick("btnCopyInviteLink", async ()=>{
+    const val = $("invLink")?.value || "";
+    if(!val) return;
+    try{
+      await navigator.clipboard.writeText(val);
+      setInvMsg("Copied ✅");
+      setTimeout(()=>setInvMsg(""), 1200);
+    }catch{
+      setInvMsg("Copy failed (browser blocked).");
+    }
+  });
+
+  onClick("btnCreateInvite", async ()=>{
+    setInvMsg("");
+    const email = ($("invEmail")?.value||"").trim().toLowerCase();
+    const role = $("invRole")?.value || "coach";
+    const team_id = $("invTeam")?.value || null;
+
+    if(!sessionUser) return setInvMsg("Login required.");
+    if(!currentClubId) return setInvMsg("Select a club first.");
+    if(!email || !email.includes("@")) return setInvMsg("Enter a valid email.");
+
+    const payload = { club_id: currentClubId, invited_email: email, role, created_by: sessionUser.id };
+    if(team_id) payload.team_id = team_id;
+
+    const { data, error } = await supabase
+      .from("coach_invites")
+      .insert(payload)
+      .select("token")
+      .single();
+
+    if(error) return setInvMsg(error.message);
+
+    const link = `${location.origin}${location.pathname}?invite=${data.token}`;
+    if($("invLink")) $("invLink").value = link;
+
+    setInvMsg("Invite created.");
+    await loadInvites();
+  });
+
+  async function revokeInvite(inviteId){
+    if(!confirm("Revoke this invite?")) return;
+    const { error } = await supabase
+      .from("coach_invites")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("id", inviteId);
+
+    if(error) return alert(error.message);
+    await loadInvites();
+  }
+
+  async function acceptInviteFromUrlIfPresent(){
+    if(!sessionUser) return;
+    const params = new URLSearchParams(location.search);
+    const token = params.get("invite");
+    if(!token) return;
+
+    // Try to claim invite
+    const { data: inv, error } = await supabase
+      .from("coach_invites")
+      .select("id, club_id, team_id, invited_email, role, expires_at, used_at, revoked_at")
+      .eq("token", token)
+      .maybeSingle();
+
+    if(error){
+      alert("Invite error: " + error.message);
+      return;
+    }
+    if(!inv){
+      alert("Invite not found (or not allowed).");
+      return;
+    }
+    if(inv.revoked_at){ alert("Invite revoked."); return; }
+    if(inv.used_at){ alert("Invite already used."); return; }
+    if(new Date(inv.expires_at) < new Date()){ alert("Invite expired."); return; }
+
+    const meEmail = (sessionUser.email || "").toLowerCase();
+    if(meEmail !== (inv.invited_email||"").toLowerCase()){
+      alert("This invite was issued for a different email.");
+      return;
+    }
+
+    // Add membership (restricted role)
+    const { error: memErr } = await supabase
+      .from("club_members")
+      .upsert({ club_id: inv.club_id, user_id: sessionUser.id, role: inv.role }, { onConflict: "club_id,user_id" });
+
+    if(memErr){
+      alert("Membership error: " + memErr.message);
+      return;
+    }
+
+    // Optional: auto-create staff profile + assign to team
+    if(inv.team_id){
+      // create staff profile if missing
+      const { data: existingStaff } = await supabase
+        .from("staff")
+        .select("id")
+        .eq("club_id", inv.club_id)
+        .eq("contact", meEmail)
+        .maybeSingle();
+
+      let staffId = existingStaff?.id || null;
+      if(!staffId){
+        const fullName = sessionUser.user_metadata?.full_name || meEmail.split("@")[0];
+        const { data: st, error: stErr } = await supabase
+          .from("staff")
+          .insert({ club_id: inv.club_id, full_name: fullName, role: "Coach", contact: meEmail })
+          .select("id")
+          .single();
+        if(stErr){
+          alert("Staff profile error: " + stErr.message);
+          return;
+        }
+        staffId = st.id;
+      }
+
+      // assign to team
+      const { error: tsErr } = await supabase
+        .from("team_staff")
+        .upsert({ staff_id: staffId, team_id: inv.team_id }, { onConflict: "staff_id,team_id" });
+      if(tsErr){
+        alert("Team assign error: " + tsErr.message);
+        return;
+      }
+    }
+
+    // mark invite used
+    const { error: useErr } = await supabase
+      .from("coach_invites")
+      .update({ used_at: new Date().toISOString(), used_by: sessionUser.id })
+      .eq("id", inv.id);
+
+    if(useErr){
+      // not fatal for membership, but show it
+      alert("Invite used-mark error: " + useErr.message);
+    }
+
+    // clean URL
+    params.delete("invite");
+    const newUrl = location.pathname + (params.toString() ? "?" + params.toString() : "");
+    history.replaceState({}, "", newUrl);
+
+    alert("Invite accepted ✅ Your access was added.");
+    await hardRefreshApp();
+  }
 
 
