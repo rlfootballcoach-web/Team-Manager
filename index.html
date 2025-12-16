@@ -210,7 +210,131 @@
       .app{grid-template-columns:1fr}
       .sidebar{height:auto; position:relative}
     }
-  </style>
+  
+    /* SIGN UP wizard */
+    .authCardWide{ width:min(720px, 94vw); padding:24px; }
+    .authHeaderRow{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+    .stepper{ display:flex; align-items:center; gap:12px; margin:14px 0 18px; }
+    .step{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.03); color:var(--muted); }
+    .step.active{ color:var(--text); border-color:rgba(110,231,255,.24); background:rgba(110,231,255,.08); }
+    .stepNum{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:10px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); font-weight:900; }
+    .stepLine{ flex:1; height:1px; background:linear-gradient(90deg, rgba(110,231,255,.35), rgba(167,139,250,.25)); opacity:.7; }
+    .stepLabe
+  <!-- SIGN UP OVERLAY (2-step wizard) -->
+  <div id="signupOverlay" class="authOverlay hide">
+    <div class="authCard authCardWide">
+      <div class="authHeaderRow">
+        <div>
+          <div class="authTitle">Create account</div>
+          <div class="authSubtitle">Set up your profile and your first club.</div>
+        </div>
+        <button class="x" id="btnSignupClose" title="Close">✕</button>
+      </div>
+
+      <div class="stepper">
+        <div class="step active" id="stepDot1"><span class="stepNum">1</span><span class="stepLabel">Account</span></div>
+        <div class="stepLine"></div>
+        <div class="step" id="stepDot2"><span class="stepNum">2</span><span class="stepLabel">Club</span></div>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="signupStep1">
+        <div class="grid2">
+          <div class="field">
+            <label>Full name</label>
+            <input id="suFullName" type="text" placeholder="John Smith" autocomplete="name">
+          </div>
+          <div class="field">
+            <label>Phone (optional)</label>
+            <input id="suPhone" type="tel" placeholder="+421..." autocomplete="tel">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input id="suEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label>Password</label>
+            <input id="suPass" type="password" placeholder="Min 8 chars" autocomplete="new-password">
+          </div>
+          <div class="field">
+            <label>Confirm password</label>
+            <input id="suPass2" type="password" placeholder="Repeat password" autocomplete="new-password">
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:space-between; align-items:center; margin-top:10px">
+          <div class="muted" style="font-size:12px">
+            Already have an account? <a href="#" class="authLink" id="btnGoToLogin">Sign in</a>
+          </div>
+          <button class="btn primary authBtn" id="btnSignupNext">NEXT</button>
+        </div>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="suMsg1"></div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="signupStep2" class="hide">
+        <div class="grid2">
+          <div class="field">
+            <label>Club name</label>
+            <input id="suClubName" type="text" placeholder="Senec Football Academy">
+          </div>
+          <div class="field">
+            <label>Your role</label>
+            <select id="suRole">
+              <option value="owner">Owner</option>
+              <option value="head_coach">Head Coach</option>
+              <option value="coach">Coach</option>
+              <option value="staff">Staff</option>
+              <option value="parent">Parent</option>
+              <option value="analyst">Analyst</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label>Language</label>
+            <select id="suLang">
+              <option value="en" selected>English</option>
+              <option value="sk">Slovak (later)</option>
+              <option value="cz">Czech (later)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Timezone</label>
+            <input id="suTz" type="text" placeholder="Auto-detected">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Club logo (PNG/JPG) (optional)</label>
+          <input id="suLogo" type="file" accept="image/png,image/jpeg">
+          <div class="muted" style="font-size:12px">Uploads to Supabase Storage bucket: <b>club-logos</b></div>
+        </div>
+
+        <div class="row" style="gap:10px; margin-top:10px; justify-content:space-between; align-items:center">
+          <button class="btn" id="btnSignupBack">BACK</button>
+          <button class="btn primary authBtn" id="btnSignupCreate">CREATE ACCOUNT & CLUB</button>
+        </div>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="suMsg2"></div>
+      </div>
+    </div>
+  </div>
+l{ font-size:12px; font-weight:800; letter-spacing:.5px; }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 720px){ .grid2{ grid-template-columns:1fr; } }
+    .authLink{ color: var(--accent); text-decoration:none; }
+    .authLink:hover{ text-decoration:underline; }
+
+</style>
 </head>
 
 <body>
@@ -778,18 +902,6 @@
   </dialog>
 
 <script>
-
-  // =========================================================
-  // Global error trap (helps reveal the real issue if any JS crashes)
-  // =========================================================
-  window.addEventListener("error", (e) => {
-    alert("JS Error: " + (e.message || "unknown"));
-  });
-  window.addEventListener("unhandledrejection", (e) => {
-    alert("Promise Error: " + (e.reason?.message || e.reason || "unknown"));
-  });
-
-
   // =========================
   // Supabase connection
   // =========================
@@ -858,42 +970,30 @@
   // =========================
   // Auth
   // =========================
-  $("btnLogin").onclick = async () => {
+  onClick("btnLogin", async () => {
     setMsg($("authMsg"), "");
     const email = $("authEmail").value.trim();
     const password = $("authPass").value;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if(error) setMsg($("authMsg"), error.message);
-  };
+  });
 
-  $("btnSignupLink").onclick = async (e) => {
+  onClick("btnSignupLink", (e) => {
     e.preventDefault();
-    setMsg($("authMsg"), "");
-    const email = $("authEmail").value.trim();
-    const password = $("authPass").value;
-    const { error } = await supabase.auth.signUp({ email, password });
-    setMsg($("authMsg"), error ? error.message : "Account created. Now sign in.");
-  };
+    // Open the Sign Up wizard
+    openSignupOverlay(($("authEmail")?.value||"").trim(), $("authPass")?.value||"");
+  });
 
-  $("btnForgot").onclick = async (e) => {
+  onClick("btnForgot", async (e) => {
     e.preventDefault();
     setMsg($("authMsg"), "");
     const email = $("authEmail").value.trim();
     if(!email) return setMsg($("authMsg"), "Enter your email first.");
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     setMsg($("authMsg"), error ? error.message : "Password reset email sent.");
-  };
-
-  // Robust bindings (won't crash if IDs change/missing)
-  const refreshBtn = $("btnRefresh");
-  if (refreshBtn) refreshBtn.addEventListener("click", async () => {
-    await hardRefreshApp();
   });
 
-  const logoutBtn = $("btnLogoutTop");
-  if (logoutBtn) logoutBtn.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-  });
+  onClick("btnLogoutTop", async () => { await supabase.auth.signOut(); });
 
   supabase.auth.onAuthStateChange(async (_event, session) => {
     sessionUser = session?.user || null;
@@ -2013,8 +2113,9 @@
   };
 
   // =========================
-  // Refresh button (bound via robust bindings above)
+  // Refresh button
   // =========================
+  onClick("btnRefresh", async () => { await hardRefreshApp(); });
 
   // =========================
   // Central refresh after auth / team change
@@ -2150,3 +2251,161 @@
 </script>
 </body>
 </html>
+  // =========================================================
+  // SIGN UP wizard (UI + Supabase)
+  // =========================================================
+  function openSignupOverlay(prefillEmail = "", prefillPass = "") {
+    const ov = $("signupOverlay");
+    if (ov) ov.classList.remove("hide");
+    document.body.style.overflow = "hidden";
+
+    // Prefill from login form if present
+    if ($("suEmail") && prefillEmail) $("suEmail").value = prefillEmail;
+    if ($("suPass") && prefillPass) $("suPass").value = prefillPass;
+    if ($("suPass2") && prefillPass) $("suPass2").value = prefillPass;
+
+    // Auto timezone
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if ($("suTz")) $("suTz").value = tz;
+
+    goSignupStep(1);
+    setMsg($("suMsg1"), "");
+    setMsg($("suMsg2"), "");
+  }
+
+  function closeSignupOverlay() {
+    const ov = $("signupOverlay");
+    if (ov) ov.classList.add("hide");
+    // If login is also open, keep body locked; otherwise unlock
+    const loginOpen = $("authOverlay") && !$("authOverlay").classList.contains("hide");
+    document.body.style.overflow = loginOpen ? "hidden" : "";
+  }
+
+  function goSignupStep(step) {
+    const s1 = $("signupStep1"), s2 = $("signupStep2");
+    const d1 = $("stepDot1"), d2 = $("stepDot2");
+    if (!s1 || !s2 || !d1 || !d2) return;
+    s1.classList.toggle("hide", step !== 1);
+    s2.classList.toggle("hide", step !== 2);
+    d1.classList.toggle("active", step === 1);
+    d2.classList.toggle("active", step === 2);
+  }
+
+  function signupValidateStep1() {
+    const full = ($("suFullName")?.value || "").trim();
+    const email = ($("suEmail")?.value || "").trim();
+    const pass = $("suPass")?.value || "";
+    const pass2 = $("suPass2")?.value || "";
+    if (!full) return "Full name is required.";
+    if (!email || !email.includes("@")) return "Valid email is required.";
+    if (pass.length < 8) return "Password must be at least 8 characters.";
+    if (pass !== pass2) return "Passwords do not match.";
+    return "";
+  }
+
+  function signupValidateStep2() {
+    const club = ($("suClubName")?.value || "").trim();
+    if (!club) return "Club name is required.";
+    return "";
+  }
+
+  onClick("btnSignupClose", closeSignupOverlay);
+  onClick("btnGoToLogin", (e) => {
+    e.preventDefault();
+    closeSignupOverlay();
+    showAuthOverlay(true);
+  });
+
+  onClick("btnSignupNext", () => {
+    setMsg($("suMsg1"), "");
+    const err = signupValidateStep1();
+    if (err) return setMsg($("suMsg1"), err);
+    goSignupStep(2);
+  });
+
+  onClick("btnSignupBack", () => {
+    setMsg($("suMsg2"), "");
+    goSignupStep(1);
+  });
+
+  onClick("btnSignupCreate", async () => {
+    setMsg($("suMsg2"), "");
+    const err = signupValidateStep2();
+    if (err) return setMsg($("suMsg2"), err);
+
+    const full_name = ($("suFullName")?.value || "").trim();
+    const phone = ($("suPhone")?.value || "").trim();
+    const email = ($("suEmail")?.value || "").trim();
+    const password = $("suPass")?.value || "";
+    const club_name = ($("suClubName")?.value || "").trim();
+    const role = $("suRole")?.value || "owner";
+    const lang = $("suLang")?.value || "en";
+    const timezone = ($("suTz")?.value || "").trim();
+    const logoFile = $("suLogo")?.files?.[0] || null;
+
+    // Create Supabase Auth user + store metadata
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: { full_name, phone, lang, timezone }
+      }
+    });
+
+    if (error) return setMsg($("suMsg2"), error.message);
+
+    // If email confirmation is ON, session may be null
+    if (!data.session) {
+      return setMsg($("suMsg2"), "Account created. Please confirm your email, then sign in.");
+    }
+
+    // Now user is authenticated; create club + membership
+    const userId = data.user?.id;
+    if (!userId) return setMsg($("suMsg2"), "Signup succeeded but no user id returned.");
+
+    const { data: club, error: cErr } = await supabase
+      .from("clubs")
+      .insert({ name: club_name })
+      .select("*")
+      .single();
+
+    if (cErr) return setMsg($("suMsg2"), "Club create error: " + cErr.message);
+
+    const { error: mErr } = await supabase
+      .from("club_members")
+      .insert({ club_id: club.id, user_id: userId, role });
+
+    if (mErr) return setMsg($("suMsg2"), "Membership error: " + mErr.message);
+
+    // Optional: upload logo
+    if (logoFile) {
+      const ok = ["image/png","image/jpeg"].includes(logoFile.type);
+      if (!ok) return setMsg($("suMsg2"), "Logo must be PNG/JPG.");
+
+      const ext = (logoFile.type === "image/png") ? "png" : "jpg";
+      const logoPath = `${club.id}/logo.${ext}`;
+
+      const { error: upErr } = await supabase.storage
+        .from("club-logos")
+        .upload(logoPath, logoFile, { upsert: true, contentType: logoFile.type });
+
+      if (upErr) return setMsg($("suMsg2"), "Logo upload error: " + upErr.message);
+
+      const { error: uErr } = await supabase
+        .from("clubs")
+        .update({ logo_path: logoPath })
+        .eq("id", club.id);
+
+      if (uErr) return setMsg($("suMsg2"), "Logo save error: " + uErr.message);
+    }
+
+    // Close signup + go into app
+    closeSignupOverlay();
+    showAuthOverlay(false);
+    currentClubId = club.id;
+    currentTeamId = "";
+    await hardRefreshApp();
+  });
+
+
