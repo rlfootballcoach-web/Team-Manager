@@ -1,0 +1,2186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FOOTBALL FACTORY — Supabase</title>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --border:#223247;
+      --text:#e7eef8;
+      --muted:#9fb1c7;
+      --accent:#6ee7ff;
+      --accent2:#a78bfa;
+      --good:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --radius: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--font); color:var(--text); background:
+        radial-gradient(900px 600px at 15% 10%, rgba(110,231,255,.10), transparent 60%),
+        radial-gradient(900px 600px at 85% 0%, rgba(167,139,250,.10), transparent 60%),
+        var(--bg);
+    }
+    .app{display:grid; grid-template-columns:280px 1fr; min-height:100vh}
+    .sidebar{
+      position:sticky; top:0; height:100vh;
+      border-right:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(16,24,36,.95), rgba(12,16,22,.95));
+      padding:18px;
+    }
+    .brand{
+      display:flex; gap:12px; align-items:center;
+      padding:14px; border:1px solid var(--border); border-radius:var(--radius);
+      background:rgba(255,255,255,.03); box-shadow:var(--shadow);
+    }
+    .logo{
+      width:44px; height:44px; border-radius:12px;
+      overflow:hidden; display:flex; align-items:center; justify-content:center;
+      background: conic-gradient(from 220deg, var(--accent), var(--accent2), var(--accent));
+      box-shadow: 0 0 0 2px rgba(255,255,255,.08) inset;
+    }
+    .logo img{
+      width:100%;height:100%;
+      object-fit:contain;
+      object-position:center;
+      display:block;
+      background:rgba(0,0,0,.12);
+    }
+    .brand h1{font-size:14px; margin:0; letter-spacing:.6px}
+    .brand p{margin:2px 0 0; font-size:12px; color:var(--muted)}
+    .nav{margin-top:16px; display:flex; flex-direction:column; gap:8px}
+    .nav button{
+      width:100%; text-align:left; cursor:pointer;
+      padding:12px 12px; border-radius:12px;
+      border:1px solid transparent;
+      background:transparent; color:var(--text);
+      display:flex; align-items:center; gap:10px;
+    }
+    .nav button:hover{background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.06)}
+    .nav button.active{background:rgba(110,231,255,.10); border-color:rgba(110,231,255,.18)}
+    .chip{
+      margin-left:auto; font-size:11px; color:var(--muted);
+      padding:3px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+    }
+    .content{padding:22px; max-width:1500px}
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      margin-bottom:16px; flex-wrap:wrap;
+    }
+    .topbarBox{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; border:1px solid var(--border); border-radius:12px;
+      background:rgba(255,255,255,.03);
+      flex-wrap:wrap;
+    }
+    .btn{
+      cursor:pointer; border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px; border-radius:12px;
+    }
+    .btn:hover{background:rgba(255,255,255,.06)}
+    .btn.primary{border-color:rgba(110,231,255,.30); background:rgba(110,231,255,.12)}
+    .btn.danger{border-color:rgba(239,68,68,.35); background:rgba(239,68,68,.10)}
+    .btn.small{padding:7px 10px; border-radius:10px; font-size:12px}
+    .card{
+      border:1px solid var(--border); border-radius:var(--radius);
+      background:rgba(255,255,255,.03);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .hide{display:none !important}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .field{display:flex; flex-direction:column; gap:6px; flex:1; min-width:180px; margin:8px 0}
+    label{font-size:12px; color:var(--muted)}
+    input, select, textarea{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(10,14,20,.65);
+      color:var(--text);
+      padding:10px 10px;
+      border-radius:12px;
+      outline:none;
+    }
+    textarea{min-height:90px; resize:vertical}
+    table{
+      width:100%; border-collapse:collapse; overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+    }
+    th, td{
+      padding:10px 10px; font-size:12px; border-bottom:1px solid rgba(255,255,255,.07);
+      vertical-align:top;
+    }
+    th{ text-align:left; color:var(--muted); background:rgba(255,255,255,.03); user-select:none; }
+    th.sortable{cursor:pointer}
+    th.sortable:hover{background:rgba(255,255,255,.05)}
+    .muted{color:var(--muted)}
+    .hr{height:1px; background:rgba(255,255,255,.08); margin:14px 0}
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px; border-radius:999px; font-size:11px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03);
+      color:var(--muted);
+    }
+    .dot{width:8px;height:8px;border-radius:50%}
+    .dot.good{background:var(--good)} .dot.bad{background:var(--bad)} .dot.warn{background:var(--warn)}
+
+    .avatar{
+      width:54px;height:54px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      overflow:hidden; display:flex; align-items:center; justify-content:center;
+    }
+    .avatar img{width:100%;height:100%;object-fit:cover;object-position:center}
+
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:11px; padding:4px 8px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px; background:rgba(255,255,255,.03);
+      color:var(--muted);
+    }
+    .badge.good{border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.10); color:#b6f3c8}
+    .badge.bad{border-color:rgba(239,68,68,.35); background:rgba(239,68,68,.10); color:#ffd0d0}
+    .badge.warn{border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.10); color:#ffe4b5}
+
+    dialog{
+      width:min(900px, 96vw);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      background:linear-gradient(180deg, rgba(16,24,36,.98), rgba(10,14,20,.98));
+      color:var(--text);
+      box-shadow:var(--shadow);
+    }
+    dialog::backdrop{background:rgba(0,0,0,.55)}
+    .dlg-top{display:flex; justify-content:space-between; align-items:center; gap:12px}
+    .x{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      width:36px; height:36px;
+      border-radius:12px; cursor:pointer;
+    }
+
+    /* AUTH OVERLAY */
+    .authOverlay{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.65);
+      display:flex; align-items:center; justify-content:center;
+      z-index:9999;
+    }
+    .authOverlay.hide{ display:none; }
+    .authCard{
+      width:min(520px, 92vw);
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(900px 600px at 50% 0%, rgba(110,231,255,.08), transparent 55%),
+        linear-gradient(180deg, rgba(16,24,36,.98), rgba(10,14,20,.98));
+      box-shadow: 0 20px 45px rgba(0,0,0,.55);
+      padding:26px;
+    }
+    .authTitle{ font-size:26px; font-weight:900; margin:0 0 6px; }
+    .authSubtitle{ color:var(--muted); margin:0 0 18px; }
+    .authLinks{
+      display:flex; justify-content:space-between; gap:12px;
+      font-size:12px; margin-top:8px;
+    }
+    .authLinks a{ color: var(--accent); text-decoration:none; }
+    .authLinks a:hover{ text-decoration:underline; }
+    .authBtn{
+      width:100%;
+      margin-top:18px;
+      padding:14px 12px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:1px;
+    }
+
+    @media (max-width: 980px){
+      .app{grid-template-columns:1fr}
+      .sidebar{height:auto; position:relative}
+    }
+  </style>
+</head>
+
+<body>
+  <!-- AUTH OVERLAY -->
+  <div id="authOverlay" class="authOverlay">
+    <div class="authCard">
+      <div class="authTitle">Sign In</div>
+      <div class="authSubtitle">Access your FOOTBALL FACTORY tools.</div>
+
+      <div class="field">
+        <label>Email</label>
+        <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input id="authPass" type="password" placeholder="Enter your password" autocomplete="current-password">
+      </div>
+
+      <div class="authLinks">
+        <a href="#" id="btnSignupLink">New here? <b>Create account</b></a>
+        <a href="#" id="btnForgot">Forgot password?</a>
+      </div>
+
+      <button class="btn primary authBtn" id="btnLogin" type="button">LOGIN</button>
+      <div class="muted" style="margin-top:10px;font-size:12px" id="authMsg"></div>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" id="brandLogo"></div>
+        <div>
+          <h1 id="brandTitle">FOOTBALL FACTORY</h1>
+          <p class="muted" id="brandSub">Supabase connected</p>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="active" data-view="dashboard">🏟️ Dashboard <span class="chip">team</span></button>
+        <button data-view="teams">👥 Teams <span class="chip" id="chipTeams">0</span></button>
+        <button data-view="players">🧑 Players <span class="chip" id="chipPlayers">0</span></button>
+        <button data-view="staff">🧑‍🏫 Staff <span class="chip" id="chipStaff">0</span></button>
+        <button data-view="events">🗓️ Events <span class="chip" id="chipEvents">0</span></button>
+        <button data-view="calendar">📅 Calendar <span class="chip">team</span></button>
+        <button data-view="statistics">📈 Statistics <span class="chip">team</span></button>
+        <button data-view="settings">⚙️ Settings</button>
+      </nav>
+
+      <div class="hr"></div>
+      <div class="muted" style="font-size:12px" id="userBadge">Not signed in</div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <div class="topbarBox">
+          <span class="muted">Club:</span>
+          <select id="clubSelect"></select>
+          <button class="btn small" id="btnOpenCreateClub">+ Club</button>
+
+          <span class="muted">Current category:</span>
+          <select id="teamSelect"></select>
+          <span class="pill" id="teamScopePill"><span class="dot warn"></span> no team selected</span>
+        </div>
+
+        <div class="row">
+          <button class="btn" id="btnRefresh">Refresh</button>
+          <button class="btn danger" id="btnLogoutTop">Logout</button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <section class="card" id="view-dashboard">
+        <h2 style="margin:0 0 10px;font-size:14px">Dashboard</h2>
+
+        <div class="row">
+          <div class="card" style="flex:1; min-width:280px">
+            <div class="muted">Upcoming events (next 5, current team)</div>
+            <div class="hr"></div>
+            <div id="dashUpcoming" class="muted">—</div>
+          </div>
+          <div class="card" style="flex:1; min-width:280px">
+            <div class="muted">Unconfirmed events (current team)</div>
+            <div class="hr"></div>
+            <div id="dashUnconfirmed" class="muted">—</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="card">
+          <div class="muted">Current team roster (sortable)</div>
+          <div class="hr"></div>
+          <table>
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="full_name">Name</th>
+                <th class="sortable" data-sort="jersey_number">Jersey</th>
+                <th class="sortable" data-sort="dob">DOB</th>
+                <th class="sortable" data-sort="positions">Position</th>
+              </tr>
+            </thead>
+            <tbody id="dashRosterTbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TEAMS -->
+      <section class="card hide" id="view-teams">
+        <h2 style="margin:0 0 10px;font-size:14px">Teams</h2>
+
+        <div class="row">
+          <div class="field">
+            <label>Team name</label>
+            <input id="teamName" placeholder="U13, U15, Women..." />
+          </div>
+          <div class="field">
+            <label>Coaches (comma separated)</label>
+            <input id="teamCoaches" placeholder="J. Smith, M. Doe" />
+          </div>
+        </div>
+        <button class="btn primary" id="btnAddTeam">Add team</button>
+
+        <div class="hr"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Coaches</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="teamsTbody"></tbody>
+        </table>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="teamsMsg"></div>
+      </section>
+
+      <!-- PLAYERS -->
+      <section class="card hide" id="view-players">
+        <h2 style="margin:0 0 10px;font-size:14px">Players (team scoped)</h2>
+
+        <div class="row">
+          <div class="field">
+            <label>Full name</label>
+            <input id="pName" placeholder="Full name">
+          </div>
+          <div class="field">
+            <label>Date of birth</label>
+            <input id="pDob" type="date">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Jersey number</label>
+            <input id="pJersey" type="number" min="0" placeholder="10">
+          </div>
+          <div class="field">
+            <label>Positions (e.g. CB/CM/CDM)</label>
+            <input id="pPos" placeholder="CB/CM">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Parent contacts</label>
+            <input id="pParent" placeholder="phone/email">
+          </div>
+          <div class="field">
+            <label>Photo upload (PNG/JPG)</label>
+            <input id="pPhoto" type="file" accept="image/png,image/jpeg">
+            <div class="muted" style="font-size:12px">Storage: player-photos</div>
+          </div>
+        </div>
+
+        <button class="btn primary" id="btnAddPlayer">Add player to current team</button>
+
+        <div class="hr"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Player</th>
+              <th>Jersey</th>
+              <th>Positions</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="playersTbody"></tbody>
+        </table>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="playersMsg"></div>
+      </section>
+
+      <!-- STAFF -->
+      <section class="card hide" id="view-staff">
+        <h2 style="margin:0 0 10px;font-size:14px">Staff (team scoped)</h2>
+
+        <div class="row">
+          <div class="field">
+            <label>Full name</label>
+            <input id="sName" placeholder="Coach name">
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select id="sRole">
+              <option>Coach</option>
+              <option>Assistant</option>
+              <option>Doctor</option>
+              <option>Physio</option>
+              <option>Goalkeeper Coach</option>
+              <option>Analyst</option>
+              <option>Manager</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Contact</label>
+            <input id="sContact" placeholder="phone/email">
+          </div>
+        </div>
+
+        <button class="btn primary" id="btnAddStaff">Create staff profile</button>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <div class="card" style="flex:1; min-width:320px">
+            <div class="muted">Team staff</div>
+            <div class="hr"></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Contact</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="teamStaffTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="flex:1; min-width:320px">
+            <div class="muted">All club staff (assign to team)</div>
+            <div class="hr"></div>
+
+            <div class="field">
+              <label>Search</label>
+              <input id="staffSearch" placeholder="Type name...">
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clubStaffTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="staffMsg"></div>
+      </section>
+
+      <!-- EVENTS -->
+      <section class="card hide" id="view-events">
+        <h2 style="margin:0 0 10px;font-size:14px">Events (team scoped)</h2>
+
+        <div class="row">
+          <div class="field">
+            <label>Type</label>
+            <select id="eType">
+              <option>Training</option>
+              <option>Match Game</option>
+              <option>Friendly Game</option>
+              <option>Tournament</option>
+              <option>Teambuilding</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Starts at</label>
+            <input id="eStarts" type="datetime-local">
+          </div>
+          <div class="field">
+            <label>Duration (minutes)</label>
+            <input id="eDur" type="number" min="15" value="90">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Location / field</label>
+            <input id="eLoc" placeholder="Stadium / Field">
+          </div>
+          <div class="field">
+            <label>Training focus</label>
+            <input id="eFocus" placeholder="Passing, Pressing...">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="eNotes" placeholder="Extra notes..."></textarea>
+        </div>
+
+        <button class="btn primary" id="btnCreateEvent">Create event</button>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <div class="card" style="flex:1; min-width:320px">
+            <div class="muted">Upcoming events (team)</div>
+            <div class="hr"></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Type</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="eventsUpcomingTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="card" style="flex:1; min-width:320px">
+            <div class="muted">Unconfirmed events (team)</div>
+            <div class="hr"></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="eventsUnconfirmedTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="eventsMsg"></div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="card hide" id="view-calendar">
+        <h2 style="margin:0 0 10px;font-size:14px">Calendar (team scoped)</h2>
+
+        <div class="row">
+          <div class="field">
+            <label>Select date</label>
+            <input id="calDay" type="date">
+          </div>
+          <div class="field">
+            <label>Day note</label>
+            <input id="calNote" placeholder="Add note for this day...">
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btnSaveDayNote">Save note</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="muted">Events on selected day</div>
+        <div class="hr"></div>
+        <div id="calEvents" class="muted">—</div>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="calMsg"></div>
+      </section>
+
+      <!-- STATISTICS -->
+      <section class="card hide" id="view-statistics">
+        <h2 style="margin:0 0 10px;font-size:14px">Statistics (team scoped)</h2>
+
+        <div class="muted">Click column headers to sort.</div>
+        <div class="hr"></div>
+
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" data-sort="full_name">Name</th>
+              <th class="sortable" data-sort="jersey_number">Jersey</th>
+              <th class="sortable" data-sort="dob">DOB</th>
+              <th class="sortable" data-sort="positions">Position</th>
+              <th class="sortable" data-sort="attendance_pct">Attendance %</th>
+              <th class="sortable" data-sort="minutes">Minutes</th>
+              <th class="sortable" data-sort="avg_rating">Avg rating</th>
+            </tr>
+          </thead>
+          <tbody id="statsTbody"></tbody>
+        </table>
+
+        <div class="muted" style="margin-top:10px;font-size:12px" id="statsMsg"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="card hide" id="view-settings">
+        <h2 style="margin:0 0 10px;font-size:14px">Settings</h2>
+        <div class="muted">Club name + logo stored in Supabase. Logo bucket: <b>club-logos</b>.</div>
+
+        <div class="row">
+          <div class="field">
+            <label>Club name</label>
+            <input id="clubNameInput" placeholder="FOOTBALL FACTORY">
+          </div>
+          <div class="field">
+            <label>Club logo (PNG/JPG)</label>
+            <input id="clubLogoFile" type="file" accept="image/png,image/jpeg">
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="btnSaveClub">Save club</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="muted" style="font-size:12px" id="settingsMsg"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create club dialog -->
+  <dialog id="clubDlg">
+    <div class="dlg-top">
+      <h3 style="margin:0;font-size:14px">Create Club</h3>
+      <button class="x" id="clubDlgClose">✕</button>
+    </div>
+    <div class="hr"></div>
+    <div class="field">
+      <label>Club name</label>
+      <input id="newClubName" placeholder="FOOTBALL FACTORY">
+    </div>
+    <div class="row">
+      <button class="btn primary" id="btnCreateClub">Create</button>
+      <button class="btn" id="btnCancelCreateClub">Cancel</button>
+    </div>
+    <div class="muted" style="margin-top:10px;font-size:12px" id="clubCreateMsg"></div>
+  </dialog>
+
+  <!-- Player dialog -->
+  <dialog id="playerDlg">
+    <div class="dlg-top">
+      <h3 style="margin:0;font-size:14px" id="playerDlgTitle">Player</h3>
+      <button class="x" id="playerDlgClose">✕</button>
+    </div>
+    <div class="hr"></div>
+    <div class="row" style="align-items:flex-start">
+      <div class="avatar" id="playerAvatar"></div>
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:900" id="ppName">—</div>
+        <div class="muted" id="ppMeta">—</div>
+        <div class="muted" id="ppParent">—</div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div class="row">
+      <button class="btn danger" id="btnDeletePlayer">Delete player</button>
+    </div>
+  </dialog>
+
+  <!-- Attendance dialog -->
+  <dialog id="attDlg">
+    <div class="dlg-top">
+      <h3 style="margin:0;font-size:14px" id="attTitle">Attendance</h3>
+      <button class="x" id="attClose">✕</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="row">
+      <div class="field" style="min-width:260px">
+        <label>Add extra player from other category (club-wide search)</label>
+        <input id="extraSearch" placeholder="Search player name...">
+      </div>
+      <div class="field" style="min-width:260px">
+        <label>Results</label>
+        <select id="extraResults"></select>
+      </div>
+      <div class="field" style="min-width:160px">
+        <label>&nbsp;</label>
+        <button class="btn" id="btnAddExtra">Add extra player</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:space-between; align-items:center">
+      <div class="muted" id="attHint">Auto-loaded team roster. Mark attendance and stats.</div>
+      <div class="row">
+        <button class="btn" id="btnToggleConfirm">Toggle Confirm</button>
+        <button class="btn primary" id="btnSaveAttendance">Save</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div style="max-height:55vh; overflow:auto; border-radius:14px">
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Present</th>
+            <th>Reason (if absent)</th>
+            <th>Minutes</th>
+            <th>Rating (1-10)</th>
+          </tr>
+        </thead>
+        <tbody id="attTbody"></tbody>
+      </table>
+    </div>
+
+    <div class="muted" style="margin-top:10px;font-size:12px" id="attMsg"></div>
+  </dialog>
+
+  <!-- Staff licenses dialog -->
+  <dialog id="licDlg">
+    <div class="dlg-top">
+      <h3 style="margin:0;font-size:14px" id="licTitle">Licenses</h3>
+      <button class="x" id="licClose">✕</button>
+    </div>
+    <div class="hr"></div>
+
+    <div class="row">
+      <div class="field">
+        <label>License</label>
+        <select id="licKind">
+          <option>UEFA C</option><option>UEFA B</option><option>UEFA A</option><option>UEFA ELITE YOUTH</option><option>UEFA PRO</option>
+          <option>UEFA GK A</option><option>UEFA GK B</option>
+          <option>COERVER INTRO</option><option>COERVER Lv.1</option><option>COERVER Lv.2</option><option>COERVER Lv.3</option>
+          <option>MANUAL</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Manual title (only if MANUAL)</label>
+        <input id="licManual" placeholder="e.g. Fitness Coach Course">
+      </div>
+      <div class="field" style="min-width:160px">
+        <label>&nbsp;</label>
+        <button class="btn primary" id="btnAddLicense">Add license</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>License</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="licTbody"></tbody>
+    </table>
+
+    <div class="muted" style="margin-top:10px;font-size:12px" id="licMsg"></div>
+  </dialog>
+
+<script>
+  // =========================
+  // DEBUG + ERROR TRAP (remove later)
+  // =========================
+  (function(){
+    function mount(){
+      const box=document.createElement('div');
+      box.id='debugBox';
+      box.style.cssText=[
+        'position:fixed','bottom:10px','right:10px','z-index:999999',
+        'width:min(520px,95vw)','max-height:45vh','overflow:auto',
+        'padding:10px 12px','border-radius:12px',
+        'border:1px solid rgba(255,255,255,.18)',
+        'background:rgba(0,0,0,.75)','color:#e7eef8',
+        'font:12px/1.35 ui-sans-serif,system-ui','white-space:pre-wrap'
+      ].join(';');
+      box.textContent='DEBUG: loaded ' + new Date().toISOString() + '\n';
+      document.body.appendChild(box);
+
+      window.__dbg = (...args) => {
+        const line = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
+        box.textContent += line + '\n';
+        box.scrollTop = box.scrollHeight;
+        console.log('[DBG]', ...args);
+      };
+
+      window.addEventListener('error', (e)=>window.__dbg('JS ERROR:', e.message));
+      window.addEventListener('unhandledrejection', (e)=>window.__dbg('PROMISE ERROR:', e.reason?.message || String(e.reason)));
+      document.addEventListener('click', (e)=>{
+        const t = e.target.closest('button,a,input,select,textarea') || e.target;
+        window.__dbg('CLICK', t?.tagName || '', t?.id ? '#'+t.id : '', t?.className ? ('class='+t.className) : '');
+      }, true);
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
+    else mount();
+  })();
+
+
+  // =========================
+  // Supabase connection
+  // =========================
+  const SUPABASE_URL = "https://erwuthbupxazsogxblpv.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyd3V0aGJ1cHhhenNvZ3hibHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4MjgyMjUsImV4cCI6MjA4MTQwNDIyNX0.EB-o4onhhs6jkScQYq0oyX1YDFv2cloDUGHpULjUCvQ";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // =========================
+  // Helpers
+  // =========================
+  const $ = (id) => document.getElementById(id);
+  const safe = (id) => document.getElementById(id) || null;
+  const bindClick = (id, fn) => { const el = safe(id); if(el) el.addEventListener('click', fn); else window.__dbg && window.__dbg('WARN missing', id); };
+  const bindChange = (id, fn) => { const el = safe(id); if(el) el.addEventListener('change', fn); else window.__dbg && window.__dbg('WARN missing', id); };
+  const bindInput = (id, fn) => { const el = safe(id); if(el) el.addEventListener('input', fn); else window.__dbg && window.__dbg('WARN missing', id); };
+  const esc = (s) => String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  const escAttr = (s) => esc(s).replaceAll('"',"&quot;");
+  function setMsg(el, txt){ el.textContent = txt || ""; }
+  function showAuthOverlay(show){
+    $("authOverlay").classList.toggle("hide", !show);
+    document.body.style.overflow = show ? "hidden" : "";
+  }
+  function fmtDT(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }catch{ return iso; }
+  }
+  function toISOFromLocal(dtLocal){
+    // dtLocal: "YYYY-MM-DDTHH:mm"
+    return new Date(dtLocal).toISOString();
+  }
+  function ratingBadge(avg){
+    if(avg == null || Number.isNaN(avg)) return `<span class="badge">N/A</span>`;
+    const v = Number(avg);
+    if(v <= 4) return `<span class="badge bad">${v.toFixed(1)}</span>`;
+    if(v <= 7) return `<span class="badge warn">${v.toFixed(1)}</span>`;
+    return `<span class="badge good">${v.toFixed(1)}</span>`;
+  }
+
+  // =========================
+  // State
+  // =========================
+  let sessionUser = null;
+  let currentClubId = "";
+  let currentTeamId = "";
+  let clubsCache = [];
+  let teamsCache = [];
+
+  // cached team roster (players objects)
+  let teamRoster = [];
+  // sorting state for roster tables and statistics
+  let rosterSort = { key: "full_name", dir: "asc" };
+  let statsSort = { key: "full_name", dir: "asc" };
+  let dashSort = { key: "full_name", dir: "asc" };
+
+  // =========================
+  // Navigation
+  // =========================
+  const views = ["dashboard","teams","players","staff","events","calendar","statistics","settings"];
+  $("nav").addEventListener("click", (e)=>{
+    const btn = e.target.closest("button[data-view]");
+    if(!btn) return;
+    const view = btn.dataset.view;
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active", b===btn));
+    views.forEach(v => $("view-"+v).classList.toggle("hide", v!==view));
+  });
+
+  // =========================
+  // Auth (robust, isolated)
+  // =========================
+  function showAuthMsg(msg){ setMsg($("authMsg"), msg || ""); }
+
+  bindClick("btnLogin", async (e) => {
+    e?.preventDefault?.();
+    showAuthMsg("");
+    const email = ($("authEmail")?.value || "").trim();
+    const password = ($("authPass")?.value || "");
+    if(!email || !password) return showAuthMsg("Enter email and password.");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error) return showAuthMsg(error.message);
+    // onAuthStateChange will refresh the app
+  });
+
+  bindClick("btnSignupLink", async (e) => {
+    e?.preventDefault?.();
+    showAuthMsg("");
+    const email = ($("authEmail")?.value || "").trim();
+    const password = ($("authPass")?.value || "");
+    if(!email || !password) return showAuthMsg("Enter email and password first.");
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin }
+    });
+    if(error) return showAuthMsg(error.message);
+    if(!data.session) return showAuthMsg("Account created. Please confirm your email, then sign in.");
+    showAuthMsg("Account created and signed in.");
+  });
+
+  bindClick("btnForgot", async (e) => {
+    e?.preventDefault?.();
+    showAuthMsg("");
+    const email = ($("authEmail")?.value || "").trim();
+    if(!email) return showAuthMsg("Enter your email first.");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    if(error) return showAuthMsg(error.message);
+    showAuthMsg("Password reset email sent.");
+  });
+
+supabase.auth.onAuthStateChange(async (_event, session) => {
+    sessionUser = session?.user || null;
+    await hardRefreshApp();
+  });
+
+  // =========================
+  // Club dialog
+  // =========================
+  const clubDlg = $("clubDlg");
+  $("btnOpenCreateClub").onclick = ()=>{
+    if(!sessionUser) return;
+    setMsg($("clubCreateMsg"), "");
+    $("newClubName").value = "";
+    clubDlg.showModal();
+  };
+  $("clubDlgClose").onclick = ()=> clubDlg.close();
+  $("btnCancelCreateClub").onclick = ()=> clubDlg.close();
+
+  $("btnCreateClub").onclick = async ()=>{
+    if(!sessionUser) return;
+    setMsg($("clubCreateMsg"), "");
+
+    const name = $("newClubName").value.trim() || "FOOTBALL FACTORY";
+    const { data: club, error } = await supabase
+      .from("clubs")
+      .insert({ name })
+      .select("*")
+      .single();
+
+    if(error){ setMsg($("clubCreateMsg"), error.message); return; }
+
+    const { error: mErr } = await supabase
+      .from("club_members")
+      .insert({ club_id: club.id, user_id: sessionUser.id, role: "owner" });
+
+    if(mErr){ setMsg($("clubCreateMsg"), "Club created but membership failed: " + mErr.message); return; }
+
+    clubDlg.close();
+    currentClubId = club.id;
+    currentTeamId = "";
+    await hardRefreshApp();
+  };
+
+  // =========================
+  // Club / Team selectors
+  // =========================
+  $("clubSelect").addEventListener("change", async ()=>{
+    currentClubId = $("clubSelect").value || "";
+    currentTeamId = "";
+    await hardRefreshApp();
+  });
+
+  $("teamSelect").addEventListener("change", async ()=>{
+    currentTeamId = $("teamSelect").value || "";
+    renderTeamPill();
+    await refreshTeamScopedData();
+  });
+
+  function renderTeamPill(){
+    const t = teamsCache.find(x=>x.id===currentTeamId);
+    if(!t) $("teamScopePill").innerHTML = `<span class="dot warn"></span> no team selected`;
+    else $("teamScopePill").innerHTML = `<span class="dot good"></span> ${esc(t.name)} view`;
+  }
+
+  // =========================
+  // Load clubs/branding/teams
+  // =========================
+  async function loadClubsForUser(){
+    const { data, error } = await supabase
+      .from("club_members")
+      .select("club_id, role, clubs:club_id(id,name,logo_path)")
+      .eq("user_id", sessionUser.id);
+
+    if(error){ clubsCache = []; return { error }; }
+
+    clubsCache = (data || [])
+      .map(x => ({ id: x.clubs?.id, name: x.clubs?.name, logo_path: x.clubs?.logo_path, role: x.role }))
+      .filter(x => x.id);
+
+    return { error: null };
+  }
+
+  function renderClubSelect(){
+    $("clubSelect").innerHTML =
+      (clubsCache.length ? clubsCache.map(c =>
+        `<option value="${c.id}">${esc(c.name)} (${esc(c.role)})</option>`
+      ).join("") : `<option value="">(no clubs)</option>`);
+
+    $("clubSelect").value = currentClubId || "";
+    const club = clubsCache.find(c=>c.id===currentClubId);
+    $("clubNameInput").value = club?.name || "";
+  }
+
+  async function loadClubBranding(clubId){
+    if(!clubId) return;
+
+    const { data, error } = await supabase.from("clubs")
+      .select("id,name,logo_path")
+      .eq("id", clubId)
+      .single();
+
+    if(error) return;
+
+    $("brandTitle").textContent = data.name || "FOOTBALL FACTORY";
+    $("clubNameInput").value = data.name || "";
+
+    const brandLogo = $("brandLogo");
+    if(data.logo_path){
+      const { data: url } = supabase.storage.from("club-logos").getPublicUrl(data.logo_path);
+      brandLogo.innerHTML = `<img src="${escAttr(url.publicUrl)}" alt="logo">`;
+      brandLogo.style.background = "rgba(255,255,255,.03)";
+    }else{
+      brandLogo.innerHTML = "";
+      brandLogo.style.background = "conic-gradient(from 220deg, var(--accent), var(--accent2), var(--accent))";
+    }
+  }
+
+  async function loadTeams(clubId){
+    const { data, error } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("club_id", clubId)
+      .is("archived_at", null)
+      .order("name", { ascending: true });
+
+    if(error){
+      teamsCache = [];
+      renderTeamsTable([]);
+      $("chipTeams").textContent = "0";
+      return;
+    }
+
+    teamsCache = data || [];
+    $("chipTeams").textContent = String(teamsCache.length);
+    renderTeamsTable(teamsCache);
+  }
+
+  function renderTeamSelector(){
+    $("teamSelect").innerHTML =
+      `<option value="">(select team)</option>` +
+      teamsCache.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
+    $("teamSelect").value = currentTeamId || "";
+    renderTeamPill();
+  }
+
+  // =========================
+  // Teams page
+  // =========================
+  $("btnAddTeam").onclick = async ()=>{
+    if(!sessionUser) return alert("Login first.");
+    if(!currentClubId) return alert("Select a club first.");
+
+    setMsg($("teamsMsg"), "");
+    const name = $("teamName").value.trim();
+    if(!name) return alert("Enter team name.");
+
+    const coaches_text = $("teamCoaches").value.split(",").map(s=>s.trim()).filter(Boolean);
+
+    const { error } = await supabase.from("teams").insert({ club_id: currentClubId, name, coaches_text });
+    if(error){ setMsg($("teamsMsg"), error.message); return; }
+
+    $("teamName").value = "";
+    $("teamCoaches").value = "";
+    await loadTeams(currentClubId);
+
+    if(!currentTeamId) currentTeamId = teamsCache[0]?.id || "";
+    renderTeamSelector();
+    await refreshTeamScopedData();
+  };
+
+  function renderTeamsTable(teams){
+    $("teamsTbody").innerHTML = teams.map(t=>`
+      <tr>
+        <td><b>${esc(t.name)}</b></td>
+        <td class="muted">${esc((t.coaches_text||[]).join(", "))}</td>
+        <td>
+          <button class="btn small" onclick="window.app.setTeam('${t.id}')">View</button>
+          <button class="btn small danger" onclick="window.app.deleteTeam('${t.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="3" class="muted">No teams.</td></tr>`;
+  }
+
+  async function deleteTeam(teamId){
+    if(!confirm("Delete team?")) return;
+    const { error } = await supabase.from("teams").delete().eq("id", teamId);
+    if(error) return alert(error.message);
+
+    await loadTeams(currentClubId);
+    if(currentTeamId === teamId) currentTeamId = teamsCache[0]?.id || "";
+    renderTeamSelector();
+    await refreshTeamScopedData();
+  }
+
+  // =========================
+  // Players (team roster)
+  // =========================
+  function playerPhotoUrl(photo_path){
+    if(!photo_path) return "";
+    const { data: url } = supabase.storage.from("player-photos").getPublicUrl(photo_path);
+    return url.publicUrl || "";
+  }
+
+  async function loadRosterForTeam(teamId){
+    if(!teamId){ teamRoster = []; return; }
+
+    const { data, error } = await supabase
+      .from("player_teams")
+      .select("player_id, players:player_id(id,full_name,dob,jersey_number,positions,parent_contacts,photo_path)")
+      .eq("team_id", teamId)
+      .is("left_at", null);
+
+    if(error){ teamRoster = []; return; }
+
+    teamRoster = (data || []).map(x => x.players).filter(Boolean);
+  }
+
+  function sortRows(arr, sort){
+    const { key, dir } = sort;
+    const mult = dir === "asc" ? 1 : -1;
+    return [...arr].sort((a,b)=>{
+      const va = a?.[key];
+      const vb = b?.[key];
+      // numbers
+      if(typeof va === "number" || typeof vb === "number"){
+        return ((Number(va||0) - Number(vb||0)) * mult);
+      }
+      // dates (yyyy-mm-dd)
+      if(key === "dob"){
+        return ((String(va||"").localeCompare(String(vb||"")))*mult);
+      }
+      return (String(va||"").localeCompare(String(vb||"")))*mult;
+    });
+  }
+
+  function renderPlayersTable(players){
+    $("playersTbody").innerHTML = players.map(p=>{
+      const url = playerPhotoUrl(p.photo_path);
+      return `
+        <tr>
+          <td><div class="avatar">${url ? `<img src="${escAttr(url)}" alt="photo">` : `<span class="muted">—</span>`}</div></td>
+          <td>
+            <b>${esc(p.full_name)}</b>
+            <div class="muted">DOB: ${esc(p.dob)} • Parent: ${esc(p.parent_contacts||"—")}</div>
+          </td>
+          <td>${Number(p.jersey_number||0)}</td>
+          <td class="muted">${esc(p.positions||"")}</td>
+          <td><button class="btn small" onclick="window.app.openPlayer('${p.id}')">Profile</button></td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="5" class="muted">No players in this team.</td></tr>`;
+  }
+
+  $("btnAddPlayer").onclick = async ()=>{
+    if(!sessionUser) return alert("Login first.");
+    if(!currentClubId) return alert("Select club first.");
+    if(!currentTeamId) return alert("Select team first.");
+
+    setMsg($("playersMsg"), "");
+
+    const full_name = $("pName").value.trim();
+    const dob = $("pDob").value;
+    const jersey_number = Number($("pJersey").value || 0);
+    const positions = $("pPos").value.trim();
+    const parent_contacts = $("pParent").value.trim();
+
+    if(!full_name) return alert("Enter full name.");
+    if(!dob) return alert("Enter DOB.");
+
+    const { data: player, error: pErr } = await supabase
+      .from("players")
+      .insert({ club_id: currentClubId, full_name, dob, jersey_number, positions, parent_contacts })
+      .select("*")
+      .single();
+
+    if(pErr){ setMsg($("playersMsg"), pErr.message); return; }
+
+    const file = $("pPhoto").files?.[0] || null;
+    if(file){
+      const ok = ["image/png","image/jpeg"].includes(file.type);
+      if(!ok) return alert("Photo must be PNG/JPG.");
+
+      const ext = (file.type === "image/png") ? "png" : "jpg";
+      const path = `${currentClubId}/${player.id}.${ext}`;
+
+      const { error: upErr } = await supabase.storage
+        .from("player-photos")
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+      if(upErr){ setMsg($("playersMsg"), "Upload error: " + upErr.message); return; }
+
+      const { error: uErr } = await supabase
+        .from("players")
+        .update({ photo_path: path })
+        .eq("id", player.id);
+
+      if(uErr){ setMsg($("playersMsg"), "Photo path save error: " + uErr.message); return; }
+    }
+
+    const { error: linkErr } = await supabase
+      .from("player_teams")
+      .insert({ player_id: player.id, team_id: currentTeamId });
+
+    if(linkErr){ setMsg($("playersMsg"), "Team link error: " + linkErr.message); return; }
+
+    $("pName").value=""; $("pDob").value=""; $("pJersey").value=""; $("pPos").value=""; $("pParent").value="";
+    $("pPhoto").value="";
+
+    await refreshTeamScopedData();
+  };
+
+  // Player dialog
+  const playerDlg = $("playerDlg");
+  $("playerDlgClose").onclick = ()=> playerDlg.close();
+  let activePlayerId = "";
+
+  async function openPlayer(playerId){
+    activePlayerId = playerId;
+    const { data: p, error } = await supabase.from("players").select("*").eq("id", playerId).single();
+    if(error) return alert(error.message);
+
+    $("playerDlgTitle").textContent = p.full_name;
+    $("ppName").textContent = p.full_name;
+    $("ppMeta").textContent = `#${Number(p.jersey_number||0)} • DOB: ${p.dob || "—"} • ${p.positions || "—"}`;
+    $("ppParent").textContent = `Parent contacts: ${p.parent_contacts || "—"}`;
+
+    const av = $("playerAvatar");
+    const url = playerPhotoUrl(p.photo_path);
+    av.innerHTML = url ? `<img src="${escAttr(url)}" alt="photo">` : `<span class="muted">No photo</span>`;
+
+    playerDlg.showModal();
+  }
+
+  $("btnDeletePlayer").onclick = async ()=>{
+    if(!activePlayerId) return;
+    if(!confirm("Delete player completely?")) return;
+
+    const { error } = await supabase.from("players").delete().eq("id", activePlayerId);
+    if(error) return alert(error.message);
+
+    playerDlg.close();
+    await refreshTeamScopedData();
+  };
+
+  // =========================
+  // Staff
+  // =========================
+  let clubStaffCache = [];
+  let teamStaffCache = [];
+  let licStaffId = "";
+
+  const licDlg = $("licDlg");
+  $("licClose").onclick = ()=> licDlg.close();
+
+  $("btnAddStaff").onclick = async ()=>{
+    if(!currentClubId) return alert("Select club");
+    setMsg($("staffMsg"), "");
+    const full_name = $("sName").value.trim();
+    const role = $("sRole").value;
+    const contact = $("sContact").value.trim();
+    if(!full_name) return alert("Enter staff name.");
+
+    const { error } = await supabase.from("staff").insert({ club_id: currentClubId, full_name, role, contact });
+    if(error){ setMsg($("staffMsg"), error.message); return; }
+
+    $("sName").value = ""; $("sContact").value = "";
+    await refreshStaff();
+  };
+
+  $("staffSearch").addEventListener("input", ()=> renderClubStaffTable());
+
+  async function refreshStaff(){
+    if(!currentClubId){ clubStaffCache=[]; teamStaffCache=[]; return; }
+    if(!currentTeamId){ clubStaffCache=[]; teamStaffCache=[]; return; }
+
+    // all staff in club
+    const { data: allS, error: e1 } = await supabase
+      .from("staff")
+      .select("*")
+      .eq("club_id", currentClubId)
+      .is("archived_at", null)
+      .order("full_name", { ascending: true });
+
+    if(e1){ setMsg($("staffMsg"), e1.message); return; }
+    clubStaffCache = allS || [];
+
+    // team staff assignments
+    const { data: ts, error: e2 } = await supabase
+      .from("team_staff")
+      .select("team_id, staff_id, role_in_team, staff:staff_id(id,full_name,role,contact)")
+      .eq("team_id", currentTeamId)
+      .is("removed_at", null);
+
+    if(e2){ setMsg($("staffMsg"), e2.message); return; }
+    teamStaffCache = (ts || []).map(x => ({ ...x.staff, role_in_team: x.role_in_team, staff_id: x.staff_id }));
+
+    $("chipStaff").textContent = String(teamStaffCache.length);
+
+    renderTeamStaffTable();
+    renderClubStaffTable();
+    setMsg($("staffMsg"), "");
+  }
+
+  function renderTeamStaffTable(){
+    $("teamStaffTbody").innerHTML = teamStaffCache.map(s=>`
+      <tr>
+        <td><b>${esc(s.full_name)}</b></td>
+        <td class="muted">${esc(s.role_in_team || s.role || "")}</td>
+        <td class="muted">${esc(s.contact || "")}</td>
+        <td>
+          <button class="btn small" onclick="window.app.openLicenses('${s.staff_id}','${escAttr(s.full_name)}')">Licenses</button>
+          <button class="btn small danger" onclick="window.app.unassignStaff('${s.staff_id}')">Remove</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="4" class="muted">No staff assigned to this team.</td></tr>`;
+  }
+
+  function renderClubStaffTable(){
+    const q = $("staffSearch").value.trim().toLowerCase();
+    const assigned = new Set(teamStaffCache.map(x=>x.staff_id));
+    const rows = clubStaffCache
+      .filter(s => !q || (s.full_name||"").toLowerCase().includes(q))
+      .map(s=>{
+        const isAssigned = assigned.has(s.id);
+        return `
+          <tr>
+            <td><b>${esc(s.full_name)}</b></td>
+            <td class="muted">${esc(s.role||"")}</td>
+            <td>
+              <button class="btn small ${isAssigned ? "" : "primary"}"
+                onclick="window.app.assignStaff('${s.id}')"
+                ${isAssigned ? "disabled" : ""}>
+                ${isAssigned ? "Assigned" : "Assign"}
+              </button>
+              <button class="btn small" onclick="window.app.openLicenses('${s.id}','${escAttr(s.full_name)}')">Licenses</button>
+            </td>
+          </tr>
+        `;
+      });
+
+    $("clubStaffTbody").innerHTML = rows.join("") || `<tr><td colspan="3" class="muted">No staff found.</td></tr>`;
+  }
+
+  async function assignStaff(staffId){
+    if(!currentTeamId) return;
+    const { error } = await supabase.from("team_staff").insert({ team_id: currentTeamId, staff_id: staffId, role_in_team: "Staff" });
+    if(error) return alert(error.message);
+    await refreshStaff();
+  }
+
+  async function unassignStaff(staffId){
+    if(!currentTeamId) return;
+    const { error } = await supabase.from("team_staff").update({ removed_at: new Date().toISOString() }).eq("team_id", currentTeamId).eq("staff_id", staffId);
+    if(error) return alert(error.message);
+    await refreshStaff();
+  }
+
+  async function openLicenses(staffId, staffName){
+    licStaffId = staffId;
+    $("licTitle").textContent = `Licenses — ${staffName}`;
+    setMsg($("licMsg"), "");
+    $("licManual").value = "";
+    $("licKind").value = "UEFA C";
+    await loadLicenses();
+    licDlg.showModal();
+  }
+
+  async function loadLicenses(){
+    if(!licStaffId) return;
+    const { data, error } = await supabase.from("staff_licenses").select("*").eq("staff_id", licStaffId).order("created_at", { ascending: false });
+    if(error){ setMsg($("licMsg"), error.message); return; }
+
+    $("licTbody").innerHTML = (data||[]).map(l=>{
+      const title = l.kind === "MANUAL" ? `MANUAL: ${l.manual_title}` : l.kind;
+      return `
+        <tr>
+          <td><b>${esc(title)}</b></td>
+          <td><button class="btn small danger" onclick="window.app.deleteLicense('${l.id}')">Delete</button></td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="2" class="muted">No licenses.</td></tr>`;
+  }
+
+  $("btnAddLicense").onclick = async ()=>{
+    if(!licStaffId) return;
+    setMsg($("licMsg"), "");
+    const kind = $("licKind").value;
+    const manual_title = $("licManual").value.trim();
+
+    if(kind === "MANUAL" && !manual_title){
+      setMsg($("licMsg"), "Manual title is required when MANUAL.");
+      return;
+    }
+
+    const payload = { staff_id: licStaffId, kind };
+    if(kind === "MANUAL") payload.manual_title = manual_title;
+
+    const { error } = await supabase.from("staff_licenses").insert(payload);
+    if(error){ setMsg($("licMsg"), error.message); return; }
+
+    $("licManual").value = "";
+    await loadLicenses();
+  };
+
+  async function deleteLicense(id){
+    const { error } = await supabase.from("staff_licenses").delete().eq("id", id);
+    if(error) return alert(error.message);
+    await loadLicenses();
+  }
+
+  // =========================
+  // Events + Attendance
+  // =========================
+  let eventsUpcoming = [];
+  let eventsUnconfirmed = [];
+  let activeEventId = "";
+  let activeEventIsMatch = false;
+  let attRows = []; // {player_id, full_name, present, absence_reason, minutes_played, match_rating}
+
+  const attDlg = $("attDlg");
+  $("attClose").onclick = ()=> attDlg.close();
+
+  $("btnCreateEvent").onclick = async ()=>{
+    if(!currentClubId) return alert("Select club");
+    if(!currentTeamId) return alert("Select team");
+    setMsg($("eventsMsg"), "");
+
+    const type = $("eType").value;
+    const startsLocal = $("eStarts").value;
+    if(!startsLocal) return alert("Select start date/time.");
+
+    const starts_at = toISOFromLocal(startsLocal);
+    const duration_minutes = Number($("eDur").value || 90);
+    const location = $("eLoc").value.trim();
+    const training_focus = $("eFocus").value.trim();
+    const notes = $("eNotes").value.trim();
+
+    const { error } = await supabase.from("events").insert({
+      club_id: currentClubId,
+      team_id: currentTeamId,
+      type,
+      starts_at,
+      duration_minutes,
+      location,
+      training_focus,
+      notes,
+      confirmed: false,
+      created_by: sessionUser?.id || null
+    });
+
+    if(error){ setMsg($("eventsMsg"), error.message); return; }
+
+    $("eStarts").value = "";
+    $("eLoc").value = "";
+    $("eFocus").value = "";
+    $("eNotes").value = "";
+
+    await refreshEvents();
+  };
+
+  async function refreshEvents(){
+    if(!currentTeamId){
+      eventsUpcoming = [];
+      eventsUnconfirmed = [];
+      $("eventsUpcomingTbody").innerHTML = `<tr><td colspan="5" class="muted">Select a team.</td></tr>`;
+      $("eventsUnconfirmedTbody").innerHTML = `<tr><td colspan="3" class="muted">Select a team.</td></tr>`;
+      $("chipEvents").textContent = "0";
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+
+    const { data: up, error: e1 } = await supabase
+      .from("events")
+      .select("*")
+      .eq("team_id", currentTeamId)
+      .gte("starts_at", nowIso)
+      .order("starts_at", { ascending: true })
+      .limit(20);
+
+    if(e1){ setMsg($("eventsMsg"), e1.message); return; }
+    eventsUpcoming = up || [];
+
+    const { data: un, error: e2 } = await supabase
+      .from("events")
+      .select("*")
+      .eq("team_id", currentTeamId)
+      .eq("confirmed", false)
+      .order("starts_at", { ascending: true })
+      .limit(20);
+
+    if(e2){ setMsg($("eventsMsg"), e2.message); return; }
+    eventsUnconfirmed = un || [];
+
+    $("chipEvents").textContent = String(eventsUpcoming.length);
+
+    renderEventsTables();
+    renderDashboardEvents();
+    setMsg($("eventsMsg"), "");
+  }
+
+  function renderEventsTables(){
+    $("eventsUpcomingTbody").innerHTML = eventsUpcoming.map(ev=>{
+      const status = ev.confirmed
+        ? `<span class="badge good">confirmed</span>`
+        : `<span class="badge bad">unconfirmed</span>`;
+      return `
+        <tr>
+          <td>${esc(fmtDT(ev.starts_at))}</td>
+          <td><b>${esc(ev.type)}</b></td>
+          <td class="muted">${esc(ev.location||"")}</td>
+          <td>${status}</td>
+          <td>
+            <button class="btn small" onclick="window.app.openAttendance('${ev.id}','${escAttr(ev.type)}','${escAttr(ev.starts_at)}',${ev.confirmed ? 'true':'false'})">Attendance</button>
+            <button class="btn small danger" onclick="window.app.deleteEvent('${ev.id}')">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="5" class="muted">No upcoming events.</td></tr>`;
+
+    $("eventsUnconfirmedTbody").innerHTML = eventsUnconfirmed.map(ev=>`
+      <tr>
+        <td>${esc(fmtDT(ev.starts_at))}</td>
+        <td><b>${esc(ev.type)}</b></td>
+        <td>
+          <button class="btn small" onclick="window.app.openAttendance('${ev.id}','${escAttr(ev.type)}','${escAttr(ev.starts_at)}',false)">Open</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="3" class="muted">No unconfirmed events.</td></tr>`;
+  }
+
+  async function deleteEvent(id){
+    if(!confirm("Delete event?")) return;
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if(error) return alert(error.message);
+    await refreshEvents();
+  }
+
+  // Attendance workflow:
+  // 1) Load roster for team
+  // 2) Ensure event_players contains roster (upsert)
+  // 3) Load event_players rows for UI
+  async function openAttendance(eventId, type, startsAt, confirmed){
+    if(!currentTeamId) return;
+    activeEventId = eventId;
+    activeEventIsMatch = ["Match Game","Friendly Game","Tournament"].includes(type);
+
+    $("attTitle").textContent = `Attendance — ${type} — ${fmtDT(startsAt)}`;
+    setMsg($("attMsg"), "");
+    $("extraSearch").value = "";
+    $("extraResults").innerHTML = `<option value="">(type to search)</option>`;
+    $("btnToggleConfirm").textContent = confirmed ? "Set Unconfirmed" : "Set Confirmed";
+
+    // load roster
+    await loadRosterForTeam(currentTeamId);
+
+    // upsert roster to event_players
+    if(teamRoster.length){
+      const payload = teamRoster.map(p=>({
+        event_id: eventId,
+        player_id: p.id,
+        is_extra: false
+      }));
+
+      // upsert by (event_id, player_id) — requires PK (it exists)
+      const { error: upErr } = await supabase.from("event_players").upsert(payload, { onConflict: "event_id,player_id" });
+      if(upErr){ setMsg($("attMsg"), upErr.message); }
+    }
+
+    await loadEventPlayersForDialog();
+    attDlg.showModal();
+  }
+
+  async function loadEventPlayersForDialog(){
+    if(!activeEventId) return;
+
+    const { data, error } = await supabase
+      .from("event_players")
+      .select("event_id, player_id, present, absence_reason, minutes_played, match_rating, is_extra, players:player_id(id,full_name)")
+      .eq("event_id", activeEventId);
+
+    if(error){ setMsg($("attMsg"), error.message); return; }
+
+    attRows = (data||[]).map(r=>({
+      player_id: r.player_id,
+      full_name: r.players?.full_name || "(unknown)",
+      present: !!r.present,
+      absence_reason: r.absence_reason || "",
+      minutes_played: Number(r.minutes_played || 0),
+      match_rating: r.match_rating == null ? "" : Number(r.match_rating),
+      is_extra: !!r.is_extra
+    })).sort((a,b)=>a.full_name.localeCompare(b.full_name));
+
+    renderAttendanceTable();
+  }
+
+  function renderAttendanceTable(){
+    $("attTbody").innerHTML = attRows.map(r=>{
+      const reasonDisabled = r.present ? "disabled" : "";
+      const ratingDisabled = activeEventIsMatch ? "" : "disabled";
+      return `
+        <tr>
+          <td>
+            <b>${esc(r.full_name)}</b>
+            ${r.is_extra ? `<div class="muted">extra</div>` : ``}
+          </td>
+          <td>
+            <select data-k="present" data-id="${r.player_id}">
+              <option value="true" ${r.present ? "selected":""}>Yes</option>
+              <option value="false" ${!r.present ? "selected":""}>No</option>
+            </select>
+          </td>
+          <td><input ${reasonDisabled} data-k="absence_reason" data-id="${r.player_id}" value="${escAttr(r.absence_reason)}" placeholder="Reason..."></td>
+          <td><input type="number" min="0" max="999" data-k="minutes_played" data-id="${r.player_id}" value="${escAttr(r.minutes_played)}"></td>
+          <td><input ${ratingDisabled} type="number" min="1" max="10" data-k="match_rating" data-id="${r.player_id}" value="${escAttr(r.match_rating)}" placeholder="${activeEventIsMatch ? '1-10' : 'N/A'}"></td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="5" class="muted">No players.</td></tr>`;
+
+    // bind changes
+    $("attTbody").querySelectorAll("select,input").forEach(el=>{
+      el.addEventListener("change", onAttFieldChange);
+      el.addEventListener("input", onAttFieldChange);
+    });
+  }
+
+  function onAttFieldChange(e){
+    const el = e.target;
+    const id = el.getAttribute("data-id");
+    const k = el.getAttribute("data-k");
+    const row = attRows.find(x=>x.player_id===id);
+    if(!row) return;
+
+    if(k === "present"){
+      row.present = (el.value === "true");
+      if(row.present) row.absence_reason = "";
+      renderAttendanceTable();
+      return;
+    }
+
+    if(k === "minutes_played") row.minutes_played = Number(el.value || 0);
+    if(k === "absence_reason") row.absence_reason = el.value || "";
+    if(k === "match_rating"){
+      const v = el.value === "" ? "" : Number(el.value);
+      row.match_rating = v;
+    }
+  }
+
+  $("btnSaveAttendance").onclick = async ()=>{
+    if(!activeEventId) return;
+    setMsg($("attMsg"), "");
+
+    const payload = attRows.map(r=>({
+      event_id: activeEventId,
+      player_id: r.player_id,
+      present: r.present,
+      absence_reason: r.present ? "" : (r.absence_reason || ""),
+      minutes_played: Number(r.minutes_played||0),
+      match_rating: (activeEventIsMatch && r.match_rating !== "") ? Number(r.match_rating) : null,
+      is_extra: !!r.is_extra
+    }));
+
+    const { error } = await supabase.from("event_players").upsert(payload, { onConflict: "event_id,player_id" });
+    if(error){ setMsg($("attMsg"), error.message); return; }
+
+    setMsg($("attMsg"), "Saved.");
+    await refreshStats();
+    await refreshDashboardRoster();
+  };
+
+  $("btnToggleConfirm").onclick = async ()=>{
+    if(!activeEventId) return;
+    // fetch current confirm
+    const { data: ev, error: e1 } = await supabase.from("events").select("confirmed").eq("id", activeEventId).single();
+    if(e1) return alert(e1.message);
+
+    const next = !ev.confirmed;
+    const payload = {
+      confirmed: next,
+      confirmed_by: next ? (sessionUser?.id || null) : null,
+      confirmed_at: next ? new Date().toISOString() : null
+    };
+
+    const { error } = await supabase.from("events").update(payload).eq("id", activeEventId);
+    if(error) return alert(error.message);
+
+    $("btnToggleConfirm").textContent = next ? "Set Unconfirmed" : "Set Confirmed";
+    await refreshEvents();
+  };
+
+  // Extra players search (club-wide)
+  $("extraSearch").addEventListener("input", async ()=>{
+    const q = $("extraSearch").value.trim();
+    if(q.length < 2){
+      $("extraResults").innerHTML = `<option value="">(type 2+ chars)</option>`;
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("players")
+      .select("id,full_name")
+      .eq("club_id", currentClubId)
+      .ilike("full_name", `%${q}%`)
+      .limit(20);
+
+    if(error){
+      $("extraResults").innerHTML = `<option value="">error</option>`;
+      return;
+    }
+
+    const existing = new Set(attRows.map(r=>r.player_id));
+    const opts = (data||[]).filter(p=>!existing.has(p.id))
+      .map(p=>`<option value="${p.id}">${esc(p.full_name)}</option>`);
+
+    $("extraResults").innerHTML = opts.length ? opts.join("") : `<option value="">(no matches)</option>`;
+  });
+
+  $("btnAddExtra").onclick = async ()=>{
+    if(!activeEventId) return;
+    const pid = $("extraResults").value;
+    if(!pid) return;
+
+    // add row into event_players
+    const { error } = await supabase.from("event_players").upsert([{
+      event_id: activeEventId,
+      player_id: pid,
+      is_extra: true
+    }], { onConflict: "event_id,player_id" });
+
+    if(error) return alert(error.message);
+
+    $("extraSearch").value = "";
+    $("extraResults").innerHTML = `<option value="">(type to search)</option>`;
+    await loadEventPlayersForDialog();
+  };
+
+  // =========================
+  // Calendar day notes
+  // =========================
+  $("btnSaveDayNote").onclick = async ()=>{
+    if(!currentTeamId) return alert("Select team");
+    const day = $("calDay").value;
+    if(!day) return alert("Select date");
+    const note = $("calNote").value.trim();
+
+    const payload = { team_id: currentTeamId, day, note, created_by: sessionUser?.id || null };
+    const { error } = await supabase.from("day_notes").upsert(payload, { onConflict: "team_id,day" });
+    if(error){ setMsg($("calMsg"), error.message); return; }
+
+    setMsg($("calMsg"), "Saved.");
+  };
+
+  $("calDay").addEventListener("change", async ()=>{
+    await refreshCalendarDay();
+  });
+
+  async function refreshCalendarDay(){
+    if(!currentTeamId) return;
+    const day = $("calDay").value;
+    if(!day){ $("calEvents").textContent = "—"; return; }
+    setMsg($("calMsg"), "");
+
+    // day note
+    const { data: dn, error: e1 } = await supabase
+      .from("day_notes")
+      .select("*")
+      .eq("team_id", currentTeamId)
+      .eq("day", day)
+      .maybeSingle();
+
+    if(e1){ setMsg($("calMsg"), e1.message); return; }
+    $("calNote").value = dn?.note || "";
+
+    // events on selected day
+    const start = new Date(day + "T00:00:00.000Z").toISOString();
+    const end = new Date(day + "T23:59:59.999Z").toISOString();
+
+    const { data: evs, error: e2 } = await supabase
+      .from("events")
+      .select("*")
+      .eq("team_id", currentTeamId)
+      .gte("starts_at", start)
+      .lte("starts_at", end)
+      .order("starts_at", { ascending: true });
+
+    if(e2){ setMsg($("calMsg"), e2.message); return; }
+
+    if(!evs?.length){
+      $("calEvents").textContent = "No events.";
+      return;
+    }
+
+    $("calEvents").innerHTML = evs.map(ev=>{
+      const status = ev.confirmed ? `<span class="badge good">confirmed</span>` : `<span class="badge bad">unconfirmed</span>`;
+      return `<div style="margin:8px 0">
+        <b>${esc(ev.type)}</b> — ${esc(fmtDT(ev.starts_at))} — ${esc(ev.location||"")} ${status}
+      </div>`;
+    }).join("");
+  }
+
+  // =========================
+  // Statistics (team roster + attendance/minutes/rating)
+  // =========================
+  async function refreshStats(){
+    if(!currentTeamId){
+      $("statsTbody").innerHTML = `<tr><td colspan="7" class="muted">Select a team.</td></tr>`;
+      return;
+    }
+
+    // load roster
+    await loadRosterForTeam(currentTeamId);
+
+    // load events for team (all history)
+    const { data: evs, error: e1 } = await supabase
+      .from("events")
+      .select("id,type,starts_at")
+      .eq("team_id", currentTeamId);
+
+    if(e1){ setMsg($("statsMsg"), e1.message); return; }
+    const eventIds = (evs||[]).map(e=>e.id);
+    const totalEvents = eventIds.length;
+
+    let ep = [];
+    if(eventIds.length){
+      const { data: epRows, error: e2 } = await supabase
+        .from("event_players")
+        .select("event_id,player_id,present,minutes_played,match_rating")
+        .in("event_id", eventIds);
+
+      if(e2){ setMsg($("statsMsg"), e2.message); return; }
+      ep = epRows || [];
+    }
+
+    // aggregate per player
+    const byPlayer = new Map();
+    for(const p of teamRoster){
+      byPlayer.set(p.id, {
+        ...p,
+        attendance_pct: totalEvents ? 0 : null,
+        minutes: 0,
+        avg_rating: null
+      });
+    }
+
+    // attendance counts per player (count rows per event)
+    const presentCount = new Map();
+    const playedMinutes = new Map();
+    const ratingSum = new Map();
+    const ratingCount = new Map();
+
+    for(const r of ep){
+      presentCount.set(r.player_id, (presentCount.get(r.player_id)||0) + (r.present ? 1 : 0));
+      playedMinutes.set(r.player_id, (playedMinutes.get(r.player_id)||0) + Number(r.minutes_played||0));
+      if(r.match_rating != null){
+        ratingSum.set(r.player_id, (ratingSum.get(r.player_id)||0) + Number(r.match_rating));
+        ratingCount.set(r.player_id, (ratingCount.get(r.player_id)||0) + 1);
+      }
+    }
+
+    for(const [pid, obj] of byPlayer.entries()){
+      obj.minutes = playedMinutes.get(pid) || 0;
+      if(totalEvents){
+        obj.attendance_pct = Math.round(((presentCount.get(pid)||0) / totalEvents) * 100);
+      } else {
+        obj.attendance_pct = null;
+      }
+      const rc = ratingCount.get(pid) || 0;
+      obj.avg_rating = rc ? (ratingSum.get(pid)/rc) : null;
+    }
+
+    // sort
+    const rows = sortRowsStats([...byPlayer.values()], statsSort);
+    renderStatsTable(rows);
+
+    setMsg($("statsMsg"), totalEvents ? `Computed from ${totalEvents} events.` : "No events yet.");
+  }
+
+  function sortRowsStats(arr, sort){
+    const { key, dir } = sort;
+    const mult = dir === "asc" ? 1 : -1;
+    return [...arr].sort((a,b)=>{
+      const va = a?.[key];
+      const vb = b?.[key];
+      if(key === "attendance_pct" || key === "minutes" || key === "avg_rating" || key === "jersey_number"){
+        const na = (va == null ? -1e9 : Number(va));
+        const nb = (vb == null ? -1e9 : Number(vb));
+        return (na - nb) * mult;
+      }
+      if(key === "dob"){
+        return String(va||"").localeCompare(String(vb||"")) * mult;
+      }
+      return String(va||"").localeCompare(String(vb||"")) * mult;
+    });
+  }
+
+  function renderStatsTable(rows){
+    $("statsTbody").innerHTML = rows.map(p=>{
+      const att = (p.attendance_pct == null) ? "N/A" : `${p.attendance_pct}%`;
+      return `
+        <tr>
+          <td><b>${esc(p.full_name)}</b></td>
+          <td>${Number(p.jersey_number||0)}</td>
+          <td>${esc(p.dob||"")}</td>
+          <td class="muted">${esc(p.positions||"")}</td>
+          <td>${esc(att)}</td>
+          <td>${Number(p.minutes||0)}</td>
+          <td>${ratingBadge(p.avg_rating)}</td>
+        </tr>
+      `;
+    }).join("") || `<tr><td colspan="7" class="muted">No players.</td></tr>`;
+  }
+
+  // Sorting handlers for statistics
+  document.querySelectorAll("#view-statistics th.sortable").forEach(th=>{
+    th.addEventListener("click", ()=>{
+      const key = th.getAttribute("data-sort");
+      if(statsSort.key === key) statsSort.dir = (statsSort.dir === "asc" ? "desc" : "asc");
+      else { statsSort.key = key; statsSort.dir = "asc"; }
+      refreshStats();
+    });
+  });
+
+  // Dashboard roster sorting
+  document.querySelectorAll("#view-dashboard th.sortable").forEach(th=>{
+    th.addEventListener("click", ()=>{
+      const key = th.getAttribute("data-sort");
+      if(dashSort.key === key) dashSort.dir = (dashSort.dir === "asc" ? "desc" : "asc");
+      else { dashSort.key = key; dashSort.dir = "asc"; }
+      refreshDashboardRoster();
+    });
+  });
+
+  // =========================
+  // Dashboard data
+  // =========================
+  async function renderDashboardEvents(){
+    if(!currentTeamId){
+      $("dashUpcoming").textContent = "Select a team.";
+      $("dashUnconfirmed").textContent = "Select a team.";
+      return;
+    }
+
+    const next5 = eventsUpcoming.slice(0,5);
+    $("dashUpcoming").innerHTML = next5.length ? next5.map(ev=>{
+      const status = ev.confirmed ? `<span class="badge good">confirmed</span>` : `<span class="badge bad">unconfirmed</span>`;
+      return `<div style="margin:8px 0">
+        <b>${esc(ev.type)}</b> — ${esc(fmtDT(ev.starts_at))} — ${esc(ev.location||"")} ${status}
+      </div>`;
+    }).join("") : "No upcoming events.";
+
+    const un = eventsUnconfirmed.slice(0,10);
+    $("dashUnconfirmed").innerHTML = un.length ? un.map(ev=>{
+      return `<div style="margin:8px 0">
+        <b>${esc(ev.type)}</b> — ${esc(fmtDT(ev.starts_at))}
+      </div>`;
+    }).join("") : "No unconfirmed events.";
+  }
+
+  async function refreshDashboardRoster(){
+    if(!currentTeamId){
+      $("dashRosterTbody").innerHTML = `<tr><td colspan="4" class="muted">Select a team.</td></tr>`;
+      return;
+    }
+    await loadRosterForTeam(currentTeamId);
+    const rows = sortRows(teamRoster, dashSort);
+    $("dashRosterTbody").innerHTML = rows.map(p=>`
+      <tr>
+        <td><b>${esc(p.full_name)}</b></td>
+        <td>${Number(p.jersey_number||0)}</td>
+        <td>${esc(p.dob||"")}</td>
+        <td class="muted">${esc(p.positions||"")}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="4" class="muted">No players.</td></tr>`;
+  }
+
+  // =========================
+  // Settings: club name + logo upload
+  // =========================
+  $("btnSaveClub").onclick = async ()=>{
+    if(!sessionUser) return;
+    if(!currentClubId) return alert("Select a club.");
+
+    setMsg($("settingsMsg"), "");
+
+    const name = $("clubNameInput").value.trim() || "FOOTBALL FACTORY";
+
+    let logo_path = null;
+    const file = $("clubLogoFile").files?.[0] || null;
+
+    if(file){
+      const ok = ["image/png","image/jpeg"].includes(file.type);
+      if(!ok) return alert("Logo must be PNG/JPG.");
+
+      const ext = (file.type === "image/png") ? "png" : "jpg";
+      logo_path = `${currentClubId}/logo.${ext}`;
+
+      const { error: upErr } = await supabase.storage
+        .from("club-logos")
+        .upload(logo_path, file, { upsert: true, contentType: file.type });
+
+      if(upErr){ setMsg($("settingsMsg"), upErr.message); return; }
+    }
+
+    const payload = { name };
+    if(logo_path) payload.logo_path = logo_path;
+
+    const { error } = await supabase.from("clubs").update(payload).eq("id", currentClubId);
+    if(error){ setMsg($("settingsMsg"), error.message); return; }
+
+    setMsg($("settingsMsg"), "Saved.");
+    $("clubLogoFile").value = "";
+
+    await loadClubsForUser();
+    renderClubSelect();
+    await loadClubBranding(currentClubId);
+  };
+
+  // =========================
+  // Refresh button
+  // =========================
+  $("btnRefresh").onclick = async ()=> {
+    await hardRefreshApp();
+  };
+
+  // =========================
+  // Central refresh after auth / team change
+  // =========================
+  async function refreshTeamScopedData(){
+    await loadRosterForTeam(currentTeamId);
+    // Players page
+    $("chipPlayers").textContent = String(teamRoster.length);
+    renderPlayersTable(sortRows(teamRoster, rosterSort));
+
+    // Staff page
+    await refreshStaff();
+
+    // Events page
+    await refreshEvents();
+
+    // Calendar default date
+    if(!$("calDay").value){
+      const today = new Date();
+      $("calDay").value = today.toISOString().slice(0,10);
+    }
+    await refreshCalendarDay();
+
+    // Dashboard
+    await refreshDashboardRoster();
+
+    // Statistics
+    await refreshStats();
+  }
+
+  // =========================
+  // HARD refresh app after login/logout/club changes
+  // =========================
+  async function hardRefreshApp(){
+    if(!sessionUser){
+      showAuthOverlay(true);
+      $("userBadge").textContent = "Not signed in";
+
+      currentClubId = "";
+      currentTeamId = "";
+      clubsCache = [];
+      teamsCache = [];
+      teamRoster = [];
+
+      $("clubSelect").innerHTML = `<option value="">(login required)</option>`;
+      $("teamSelect").innerHTML = `<option value="">(select team)</option>`;
+      renderTeamPill();
+
+      $("chipTeams").textContent = "0";
+      $("chipPlayers").textContent = "0";
+      $("chipStaff").textContent = "0";
+      $("chipEvents").textContent = "0";
+
+      renderTeamsTable([]);
+      renderPlayersTable([]);
+      $("teamStaffTbody").innerHTML = `<tr><td colspan="4" class="muted">—</td></tr>`;
+      $("clubStaffTbody").innerHTML = `<tr><td colspan="3" class="muted">—</td></tr>`;
+      $("eventsUpcomingTbody").innerHTML = `<tr><td colspan="5" class="muted">—</td></tr>`;
+      $("eventsUnconfirmedTbody").innerHTML = `<tr><td colspan="3" class="muted">—</td></tr>`;
+      $("dashUpcoming").textContent = "—";
+      $("dashUnconfirmed").textContent = "—";
+      $("dashRosterTbody").innerHTML = `<tr><td colspan="4" class="muted">—</td></tr>`;
+      $("statsTbody").innerHTML = `<tr><td colspan="7" class="muted">—</td></tr>`;
+      return;
+    }
+
+    showAuthOverlay(false);
+    $("userBadge").textContent = `Signed in: ${sessionUser.email || sessionUser.id}`;
+
+    const { error } = await loadClubsForUser();
+    if(error){ alert("Club load error: " + error.message); return; }
+
+    if(clubsCache.length === 0){
+      $("clubSelect").innerHTML = `<option value="">(no clubs — click + Club)</option>`;
+      $("brandTitle").textContent = "FOOTBALL FACTORY";
+      $("brandLogo").innerHTML = "";
+      $("brandLogo").style.background = "conic-gradient(from 220deg, var(--accent), var(--accent2), var(--accent))";
+      teamsCache = [];
+      teamRoster = [];
+      renderTeamsTable([]);
+      renderPlayersTable([]);
+      $("chipTeams").textContent = "0";
+      $("chipPlayers").textContent = "0";
+      $("chipStaff").textContent = "0";
+      $("chipEvents").textContent = "0";
+      return;
+    }
+
+    if(!currentClubId || !clubsCache.some(c=>c.id===currentClubId)){
+      currentClubId = clubsCache[0].id;
+    }
+
+    renderClubSelect();
+    await loadClubBranding(currentClubId);
+
+    await loadTeams(currentClubId);
+    if(!currentTeamId || !teamsCache.some(t=>t.id===currentTeamId)){
+      currentTeamId = teamsCache[0]?.id || "";
+    }
+
+    renderTeamSelector();
+    await refreshTeamScopedData();
+  }
+
+  // =========================
+  // Global onclick API
+  // =========================
+  window.app = {
+    setTeam: async (teamId) => {
+      currentTeamId = teamId;
+      $("teamSelect").value = teamId;
+      renderTeamPill();
+      await refreshTeamScopedData();
+    },
+    deleteTeam,
+    openPlayer,
+    assignStaff,
+    unassignStaff,
+    openLicenses,
+    deleteLicense,
+    openAttendance,
+    deleteEvent
+  };
+
+  // =========================
+  // Init
+  // =========================
+  (async function init(){
+    const { data } = await supabase.auth.getSession();
+    sessionUser = data.session?.user || null;
+    await hardRefreshApp();
+  })();
+</script>
+</body>
+</html>
